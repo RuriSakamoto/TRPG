@@ -32,7 +32,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setError(error);
         } else {
           onClose();
-          // フォームをリセット
           setEmail('');
           setPassword('');
           setDisplayName('');
@@ -43,7 +42,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setError(error);
         } else {
           onClose();
-          // フォームをリセット
           setEmail('');
           setPassword('');
         }
@@ -64,37 +62,38 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 relative">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 rounded-lg p-4 sm:p-6 md:p-8 max-w-md w-full relative border border-slate-600 max-h-[90vh] overflow-y-auto">
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-400 hover:text-slate-200 transition-colors"
+          aria-label="閉じる"
         >
-          <X size={24} />
+          <X size={20} className="sm:w-6 sm:h-6" />
         </button>
 
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-slate-100 pr-8">
           {isSignUp ? 'アカウント作成' : 'ログイン'}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1">
                 表示名
               </label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="w-full px-3 py-2 text-sm sm:text-base bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-100"
                 placeholder="プレイヤー名"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1">
               メールアドレス
             </label>
             <input
@@ -102,13 +101,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="w-full px-3 py-2 text-sm sm:text-base bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-100"
               placeholder="email@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1">
               パスワード
             </label>
             <input
@@ -117,13 +116,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="w-full px-3 py-2 text-sm sm:text-base bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-100"
               placeholder="6文字以上"
             />
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
+            <div className="text-red-400 text-xs sm:text-sm bg-red-900/30 p-2 sm:p-3 rounded border border-red-700">
               {error}
             </div>
           )}
@@ -131,19 +130,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-amber-600 text-white py-2 sm:py-2.5 rounded-md hover:bg-amber-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
           >
             {loading ? '処理中...' : isSignUp ? 'アカウント作成' : 'ログイン'}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-3 sm:mt-4 text-center">
           <button
             onClick={() => {
               setIsSignUp(!isSignUp);
               setError('');
             }}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-amber-400 hover:text-amber-300 text-xs sm:text-sm transition-colors"
           >
             {isSignUp
               ? 'すでにアカウントをお持ちの方はこちら'

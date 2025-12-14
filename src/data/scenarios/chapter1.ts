@@ -163,12 +163,17 @@ export const chapter1: Scene[] = [
       {
         text: 'まだ時間はある',
         nextScene: 'chap1_action_select',
-        condition: (s) => s.turn !== 2 && s.turn < 4
+        condition: (s) => s.turn < 2
       },
       {
         text: 'そろそろ時間だ',
         nextScene: 'chap1_cleanup_early',
         condition: (s) => s.turn >= 4
+      },
+      {
+        text: '行動を続ける',
+        nextScene: 'chap1_action_select',
+        condition: (s) => s.turn > 2 && s.turn < 4
       }
     ]
   },
@@ -213,19 +218,6 @@ export const chapter1: Scene[] = [
     ]
   },
   {
-    id: 'chap1_hide_critical',
-    title: '完璧な隠蔽',
-    description: '証拠を完全に隠滅した',
-    text: '完璧だ！ 祭壇は跡形もなく消え、部屋は何事もなかったかのように整っている。\n\n「ふう…危なかった。でも、これで証拠は完全に隠滅したね」\n\nしかし、足音は止まった。\nどうやらトパーズだったようだ。\n\n（SAN値回復＋隠蔽スキル上昇）',
-    choices: [
-      { 
-        text: '安堵する', 
-        nextScene: 'chap1_topaz_call',
-        action: (s) => ({ ...s, san: Math.min(s.san + 10, 90) }) 
-      }
-    ]
-  },
-  {
     id: 'chap1_hide_success',
     title: '何とか隠蔽',
     description: '祭壇を片付けた',
@@ -246,14 +238,14 @@ export const chapter1: Scene[] = [
     text: '端末が震えた。画面には「トパーズ」の文字。\n\n「……やれやれ。この時間に連絡してくるなんて、相変わらずワーカーホリックだね」\n\n無視することもできるが、後でカブに噛まれるのも面倒だ。\nどうする？',
     choices: [
       { 
-        text: '手短に対応する (1ターン消費)', 
+        text: '手短に対応する', 
         nextScene: 'chap1_topaz_talk',
         action: (s) => ({ ...s, turn: s.turn + 1 }) 
       },
       { 
         text: '居留守を使う (SAN値減少)', 
-        nextScene: 'chap1_action_select',
-        action: (s) => ({ ...s, san: s.san - 5 }) 
+        nextScene: 'chap1_after_topaz',
+        action: (s) => ({ ...s, san: s.san - 5, turn: s.turn + 1 }) 
       }
     ]
   },
@@ -262,7 +254,26 @@ export const chapter1: Scene[] = [
     title: '電話対応',
     description: 'トパーズの用件を処理',
     text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ハイハイ、明日一番で処理しておくよ。今は大事な商談中（推し活）でね」\n\n適当にあしらって電話を切った。\n少し時間を食ってしまったが、平和は守られた。',
-    choices: [{ text: '行動に戻る', nextScene: 'chap1_action_select' }]
+    choices: [
+      { text: '行動に戻る', nextScene: 'chap1_after_topaz' }
+    ]
+  },
+  {
+    id: 'chap1_after_topaz',
+    title: '時間確認',
+    description: 'まだ時間はあるか？',
+    text: '時計を確認する。まだ少し時間がありそうだ。',
+    choices: [
+      {
+        text: 'もう少し推し活を続ける',
+        nextScene: 'chap1_action_select',
+        condition: (s) => s.turn < 4
+      },
+      {
+        text: 'そろそろ片付けよう',
+        nextScene: 'chap1_cleanup_early'
+      }
+    ]
   },
 
   // --- クライマックス：帰宅 ---
