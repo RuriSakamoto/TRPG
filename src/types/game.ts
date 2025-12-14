@@ -153,10 +153,11 @@ export interface Choice {
     removeItem?: string;
     addSkill?: string;
   };
+  action?: (status: GameStatus) => Partial<GameStatus>; // 追加：動的なステータス変更用
   result?: string;
   skillCheck?: {
     skillName: string;
-    targetValue: number;
+    targetValue?: number; // オプショナルに変更
     onSuccess?: string;
     onFailure?: string;
   };
