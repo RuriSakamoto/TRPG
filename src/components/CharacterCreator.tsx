@@ -33,6 +33,30 @@ export const CharacterCreator = () => {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [showCounterAnimation, setShowCounterAnimation] = useState(false);
   const [animatedCount, setAnimatedCount] = useState(0);
+  const [isCounterLoading, setIsCounterLoading] = useState(false);
+
+  // カウンターを取得する関数
+  const fetchCounter = async () => {
+    if (isCounterLoading) return; // 既にロード中の場合はスキップ
+    
+    setIsCounterLoading(true);
+    try {
+      const response = await fetch('/api/counter', {
+        cache: 'no-store', // キャッシュを無効化
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
+      const data = await response.json();
+      if (data.count !== undefined) {
+        setTotalCount(data.count);
+      }
+    } catch (error) {
+      console.error('Failed to fetch counter:', error);
+    } finally {
+      setIsCounterLoading(false);
+    }
+  };
 
   useEffect(() => {
     // 認証状態が確定するまで待つ
@@ -61,19 +85,19 @@ export const CharacterCreator = () => {
 
     loadEndings();
 
-    // 現在のカウンターを取得
+    // 初回カウンター取得
     fetchCounter();
-  }, [user, authLoading]);
 
-  const fetchCounter = async () => {
-    try {
-      const response = await fetch('/api/counter');
-      const data = await response.json();
-      setTotalCount(data.count);
-    } catch (error) {
-      console.error('Failed to fetch counter:', error);
-    }
-  };
+    // 10秒ごとにカウンターを更新
+    const counterInterval = setInterval(() => {
+      fetchCounter();
+    }, 10000); // 10秒
+
+    // クリーンアップ
+    return () => {
+      clearInterval(counterInterval);
+    };
+  }, [user, authLoading]);
 
   const rollDice = (statName: keyof typeof STAT_FORMULAS) => {
     const formula = STAT_FORMULAS[statName];
@@ -154,18 +178,27 @@ export const CharacterCreator = () => {
     try {
       const response = await fetch('/api/counter/increment', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      if (!response.ok) {
+        throw new Error('カウンターの更新に失敗しました');
+      }
+
       const data = await response.json();
       
       if (data.count) {
         // カウントアップアニメーションを表示
         setShowCounterAnimation(true);
-        setAnimatedCount(0);
+        setAnimatedCount(totalCount || 0); // 現在のカウントから開始
         
         // アニメーション効果
         const duration = 2000; // 2秒
         const steps = 60;
-        const increment = data.count / steps;
+        const startCount = totalCount || 0;
+        const increment = (data.count - startCount) / steps;
         let currentStep = 0;
 
         const timer = setInterval(() => {
@@ -174,7 +207,7 @@ export const CharacterCreator = () => {
             setAnimatedCount(data.count);
             clearInterval(timer);
             
-            // 3秒後にゲーム画面へ遷移
+            // 1秒後にゲーム画面へ遷移
             setTimeout(() => {
               // キャラクターデータと技能をLocalStorageに保存
               const gameData = {
@@ -190,27 +223,33 @@ export const CharacterCreator = () => {
               router.push('/game');
             }, 1000);
           } else {
-            setAnimatedCount(Math.floor(increment * currentStep));
+            setAnimatedCount(Math.floor(startCount + increment * currentStep));
           }
         }, duration / steps);
+      } else {
+        // カウントが取得できなくてもゲームは開始
+        startGameWithoutCounter();
       }
     } catch (error) {
       console.error('Failed to increment counter:', error);
       // エラーでもゲームは開始できるようにする
-      alert('カウンターの更新に失敗しましたが、ゲームを開始します。');
-      
-      const gameData = {
-        character,
-        skills: selectedSkills,
-        otakuLevel: 0, // 隠しパラメータ：常に0で初期化
-        san: character.SAN,
-      };
-      
-      localStorage.setItem('character', JSON.stringify(character));
-      localStorage.setItem('gameData', JSON.stringify(gameData));
-      
-      router.push('/game');
+      startGameWithoutCounter();
     }
+  };
+
+  // カウンターなしでゲームを開始する関数
+  const startGameWithoutCounter = () => {
+    const gameData = {
+      character,
+      skills: selectedSkills,
+      otakuLevel: 0,
+      san: character.SAN,
+    };
+    
+    localStorage.setItem('character', JSON.stringify(character));
+    localStorage.setItem('gameData', JSON.stringify(gameData));
+    
+    router.push('/game');
   };
 
   const completionRate = getCompletionRate(clearedEndings, ENDINGS.length);
@@ -257,12 +296,17 @@ export const CharacterCreator = () => {
                 <span className="text-2xl sm:text-3xl">✨</span>
                 <div className="text-sm sm:text-base">
                   <span className="text-slate-300">現在</span>
-                  <span className="text-2xl sm:text-3xl font-bold mx-1 sm:mx-2 text-amber-400">
+                  <span className="text-2xl sm:text-3xl font-bold mx-1 sm:mx-2 text-amber-400 transition-all duration-500">
                     {totalCount.toLocaleString()}
                   </span>
                   <span className="text-slate-300">人のアベンチュリンが誕生しています</span>
                 </div>
                 <span className="text-2xl sm:text-3xl">✨</span>
+              </div>
+              {/* リアルタイム更新インジケーター */}
+              <div className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
+                <span className={`inline-block w-2 h-2 rounded-full ${isCounterLoading ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></span>
+                <span>リアルタイム更新中</span>
               </div>
             </div>
           </div>

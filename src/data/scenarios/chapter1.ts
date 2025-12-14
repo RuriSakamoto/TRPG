@@ -178,7 +178,7 @@ export const chapter1: Scene[] = [
     ]
   },
 
-  // --- 聞き耳判定（新規追加）---
+  // --- 聞き耳判定 ---
   {
     id: 'chap1_listen_check',
     title: '物音',
@@ -239,13 +239,12 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '手短に対応する', 
-        nextScene: 'chap1_topaz_talk',
-        action: (s) => ({ ...s, turn: s.turn + 1 }) 
+        nextScene: 'chap1_topaz_talk'
       },
       { 
         text: '居留守を使う (SAN値減少)', 
         nextScene: 'chap1_after_topaz',
-        action: (s) => ({ ...s, san: s.san - 5, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, san: s.san - 5 }) 
       }
     ]
   },
@@ -255,7 +254,7 @@ export const chapter1: Scene[] = [
     description: 'トパーズの用件を処理',
     text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ハイハイ、明日一番で処理しておくよ。今は大事な商談中（推し活）でね」\n\n適当にあしらって電話を切った。\n少し時間を食ってしまったが、平和は守られた。',
     choices: [
-      { text: '行動に戻る', nextScene: 'chap1_after_topaz' }
+      { text: '次へ', nextScene: 'chap1_after_topaz' }
     ]
   },
   {
@@ -267,7 +266,8 @@ export const chapter1: Scene[] = [
       {
         text: 'もう少し推し活を続ける',
         nextScene: 'chap1_action_select',
-        condition: (s) => s.turn < 4
+        condition: (s) => s.turn < 4,
+        action: (s) => ({ ...s, turn: s.turn + 1 })
       },
       {
         text: 'そろそろ片付けよう',
