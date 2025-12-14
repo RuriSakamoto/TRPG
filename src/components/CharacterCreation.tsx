@@ -1,72 +1,87 @@
-import React, { useState } from 'react';
+// src/components/CharacterCreation.tsx
 
-type Stats = {
-  str: number;
-  dex: number;
-  pow: number;
-  app: number;
-};
+import React, { useState } from 'react';
+import { GameStatus, AVAILABLE_SKILLS } from '../types/game';
 
 type Props = {
-  onComplete: (stats: Stats) => void;
+  onComplete: (status: Partial<GameStatus>) => void;
 };
 
 export const CharacterCreation = ({ onComplete }: Props) => {
-  const [stats, setStats] = useState<Stats>({ str: 0, dex: 0, pow: 0, app: 0 });
+  const [skills, setSkills] = useState<string[]>([]);
+  const [san, setSan] = useState(60);
+  const [otakuLevel, setOtakuLevel] = useState(0);
 
-  const rollDice = () => {
-    // 3d6のロール
-    const roll = () => Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1;
-    setStats({
-      str: roll(),
-      dex: roll(),
-      pow: roll(),
-      app: roll(),
+  const toggleSkill = (skill: string) => {
+    setSkills(prev => 
+      prev.includes(skill) 
+        ? prev.filter(s => s !== skill)
+        : [...prev, skill]
+    );
+  };
+
+  const handleStart = () => {
+    onComplete({
+      skills,
+      san,
+      otakuLevel
     });
   };
 
-  const isValid = stats.str > 0;
-
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-full bg-gray-900 text-white p-8 select-none">
-      <h1 className="text-3xl font-bold mb-12 text-indigo-300 drop-shadow-lg">キャラクター作成</h1>
+    <div className="fixed inset-0 bg-gray-900 text-white flex flex-col items-center justify-center p-4 z-50">
+      <h1 className="text-3xl font-bold mb-8 text-indigo-400">キャラクター作成</h1>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-        <div className="flex flex-col items-center p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-          <span className="text-gray-400 mb-2 text-sm font-bold">STR (筋力)</span>
-          <span className="text-4xl font-bold text-red-400 font-mono">{stats.str || '-'}</span>
+      <div className="w-full max-w-2xl bg-gray-800 p-6 rounded-xl shadow-lg space-y-6 border border-gray-700">
+        {/* ステータス設定 */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold border-b border-gray-600 pb-2">ステータス設定</h2>
+          <div className="flex items-center justify-between">
+            <span>SAN値 (初期値)</span>
+            <input 
+              type="number" 
+              value={san} 
+              onChange={(e) => setSan(Number(e.target.value))}
+              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-20 text-right focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span>オタク度</span>
+            <input 
+              type="number" 
+              value={otakuLevel} 
+              onChange={(e) => setOtakuLevel(Number(e.target.value))}
+              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 w-20 text-right focus:outline-none focus:border-indigo-500"
+            />
+          </div>
         </div>
-        <div className="flex flex-col items-center p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-          <span className="text-gray-400 mb-2 text-sm font-bold">DEX (敏捷)</span>
-          <span className="text-4xl font-bold text-green-400 font-mono">{stats.dex || '-'}</span>
-        </div>
-        <div className="flex flex-col items-center p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-          <span className="text-gray-400 mb-2 text-sm font-bold">POW (精神)</span>
-          <span className="text-4xl font-bold text-blue-400 font-mono">{stats.pow || '-'}</span>
-        </div>
-        <div className="flex flex-col items-center p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-          <span className="text-gray-400 mb-2 text-sm font-bold">APP (外見)</span>
-          <span className="text-4xl font-bold text-pink-400 font-mono">{stats.app || '-'}</span>
-        </div>
-      </div>
 
-      <div className="flex gap-6">
-        <button 
-          onClick={rollDice}
-          className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-bold transition-all transform hover:scale-105 shadow-lg"
+        {/* 技能選択 */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold border-b border-gray-600 pb-2">技能選択</h2>
+          <p className="text-sm text-gray-400">習得した技能は判定成功率に+20%のボーナスがつきます。</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {AVAILABLE_SKILLS.map(skill => (
+              <button
+                key={skill}
+                onClick={() => toggleSkill(skill)}
+                className={`px-3 py-2 rounded text-sm transition-colors border ${
+                  skills.includes(skill)
+                    ? 'bg-indigo-600 border-indigo-400 text-white font-bold shadow-[0_0_10px_rgba(79,70,229,0.5)]'
+                    : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {skill}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={handleStart}
+          className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 rounded-lg mt-8 transition-all transform hover:scale-[1.02] shadow-lg"
         >
-          ダイスを振る
-        </button>
-        <button 
-          onClick={() => onComplete(stats)}
-          disabled={!isValid}
-          className={`px-8 py-4 rounded-lg font-bold transition-all transform shadow-lg ${
-            isValid 
-              ? 'bg-yellow-500 hover:bg-yellow-400 text-black hover:scale-105' 
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          決定して開始
+          ゲーム開始
         </button>
       </div>
     </div>

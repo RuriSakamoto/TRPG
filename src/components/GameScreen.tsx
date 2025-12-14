@@ -1,132 +1,163 @@
+// src/components/GameScreen.tsx
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTRPG } from '../hooks/useTRPG';
 import { CharacterCreation } from './CharacterCreation';
 
 export const GameScreen = () => {
-  const { status, currentScene, logs, handleChoice, isCharacterCreated, initCharacter } = useTRPG();
+  // setInitialStatus を受け取るように変更
+  const { status, currentScene, logs, handleChoice, setInitialStatus } = useTRPG();
   const logsEndRef = useRef<HTMLDivElement>(null);
+  
+  // キャラクター作成中かどうかを管理するstate
+  const [isCreating, setIsCreating] = useState(true);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
-  // キャラクター未作成時は作成画面を表示
-  if (!isCharacterCreated) {
-    return <CharacterCreation onComplete={initCharacter} />;
+  // 作成中の場合は作成画面を表示
+  if (isCreating) {
+    return <CharacterCreation onComplete={(initial) => {
+      setInitialStatus(initial);
+      setIsCreating(false);
+    }} />;
   }
 
   if (!currentScene) return <div className="text-white p-10">Loading...</div>;
 
-  const bgStyle = currentScene.backgroundImage
-    ? { backgroundImage: `url(${currentScene.backgroundImage})` }
-    : { backgroundColor: '#1a1a2e' };
-
-  const getCurrentTime = () => {
-    const startHour = 21;
-    const minutesPerTurn = 30;
-    const totalMinutes = status.turn * minutesPerTurn;
-    
-    const currentHour = startHour + Math.floor(totalMinutes / 60);
-    const currentMinute = totalMinutes % 60;
-    
-    return `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
-  };
-
-  const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
-
   return (
-    <div 
-      className="relative w-full h-screen bg-cover bg-center overflow-hidden font-sans text-white select-none"
-      style={bgStyle}
-    >
-      {!currentScene.backgroundImage && (
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-slate-800" />
-      )}
-
-      {currentScene.characterImage && (
-        <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0">
-          <img 
-            src={currentScene.characterImage} 
-            alt="Character" 
-            className="h-[90vh] object-contain drop-shadow-2xl translate-y-10" 
-          />
-        </div>
-      )}
-
-      {/* 上部ステータスバー */}
-      <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="text-sm text-gray-300">
-          <p>周回数: <span className="text-yellow-400 font-bold">{status.loopCount}</span></p>
-          {status.clearedEndings.includes('true_end') && <span className="text-green-400 text-xs">★ True End済</span>}
-        </div>
-        <div className="flex gap-4 md:gap-6 text-sm font-bold drop-shadow-md">
-          {/* 新規ステータス表示 */}
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">STR</span><span>{status.str}</span></div>
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">DEX</span><span>{status.dex}</span></div>
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">POW</span><span>{status.pow}</span></div>
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">APP</span><span>{status.app}</span></div>
-          
-          <div className="w-px bg-gray-600 mx-1"></div>
-          
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">SAN値</span><span className={status.san < 30 ? "text-red-500" : "text-green-400"}>{status.san}</span></div>
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">好感度</span><span className="text-pink-400">{status.affection}</span></div>
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">オタク度</span><span className="text-yellow-400">{status.otakuLevel}</span></div>
-          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">残りターン</span><span className="text-blue-400">{Math.max(0, 4 - status.turn)}</span></div>
-        </div>
-      </div>
-
-      {/* ログウィンドウ */}
-      <div className="absolute top-20 right-0 w-64 h-[calc(100vh-300px)] z-10 pointer-events-none hidden md:flex flex-col items-end pr-4">
-        <div className="w-full h-full bg-gradient-to-l from-black/80 to-transparent border-r-4 border-green-900/30 rounded-l-xl p-4 flex flex-col shadow-lg backdrop-blur-sm overflow-hidden">
-          <div className="text-xs text-green-500 font-bold border-b border-green-900/50 pb-2 mb-2 text-right">
-            SYSTEM LOG
+    <div className="min-h-screen bg-gray-900 text-white font-sans selection:bg-indigo-500 selection:text-white overflow-hidden">
+      {/* メインゲーム画面 */}
+      <div className="relative w-full h-screen flex flex-col md:flex-row">
+        
+        {/* 左側: ビジュアル & シナリオエリア */}
+        <div className="relative flex-1 h-1/2 md:h-full flex flex-col">
+          {/* 背景画像 */}
+          <div className="absolute inset-0 z-0">
+            {currentScene.backgroundImage ? (
+              <img 
+                src={currentScene.backgroundImage} 
+                alt="background" 
+                className="w-full h-full object-cover opacity-60"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
           </div>
-          <div className="flex-grow overflow-y-auto font-mono text-xs space-y-2 scrollbar-hide text-right">
+
+          {/* キャラクター立ち絵 */}
+          {currentScene.characterImage && (
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 w-auto h-[80%] max-h-[600px]">
+              <img 
+                src={currentScene.characterImage} 
+                alt="character" 
+                className="h-full w-auto object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              />
+            </div>
+          )}
+
+          {/* シナリオテキストエリア */}
+          <div className="absolute bottom-0 w-full p-6 z-20 bg-gradient-to-t from-gray-900 via-gray-900/90 to-transparent pt-20">
+            <div className="max-w-4xl mx-auto bg-black/60 backdrop-blur-sm border border-gray-700 p-6 rounded-xl shadow-2xl">
+              <p className="text-lg md:text-xl leading-relaxed text-gray-100 whitespace-pre-wrap">
+                {currentScene.text}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 右側: ステータス & 選択肢エリア */}
+        <div className="w-full md:w-[400px] bg-gray-800 border-l border-gray-700 flex flex-col h-1/2 md:h-full z-30 shadow-2xl">
+          
+          {/* ステータスパネル */}
+          <div className="p-6 bg-gray-800/95 backdrop-blur border-b border-gray-700">
+            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Player Status</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-700/50 p-3 rounded-lg border border-gray-600">
+                <div className="text-xs text-gray-400 mb-1">SAN値</div>
+                <div className="text-2xl font-bold text-blue-400">{status.san}</div>
+              </div>
+              <div className="bg-gray-700/50 p-3 rounded-lg border border-gray-600">
+                <div className="text-xs text-gray-400 mb-1">好感度</div>
+                <div className="text-2xl font-bold text-pink-400">{status.affection}</div>
+              </div>
+              <div className="bg-gray-700/50 p-3 rounded-lg border border-gray-600">
+                <div className="text-xs text-gray-400 mb-1">オタク度</div>
+                <div className="text-2xl font-bold text-purple-400">{status.otakuLevel}</div>
+              </div>
+              <div className="bg-gray-700/50 p-3 rounded-lg border border-gray-600">
+                <div className="text-xs text-gray-400 mb-1">所持品</div>
+                <div className="text-sm font-medium text-gray-300 truncate">
+                  {status.items.length > 0 ? status.items.join(', ') : 'なし'}
+                </div>
+              </div>
+            </div>
+            {/* 技能表示エリアを追加 */}
+            {status.skills.length > 0 && (
+              <div className="mt-4 bg-gray-700/50 p-3 rounded-lg border border-gray-600">
+                <div className="text-xs text-gray-400 mb-1">習得技能</div>
+                <div className="flex flex-wrap gap-1">
+                  {status.skills.map(skill => (
+                    <span key={skill} className="text-xs bg-indigo-900/50 text-indigo-200 px-2 py-1 rounded border border-indigo-500/30">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ログエリア */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-900/50 text-sm font-mono border-b border-gray-700">
             {logs.map((log, i) => (
-              <div key={i} className="text-green-400 animate-pulse break-words">
+              <div key={i} className="text-gray-400 border-l-2 border-gray-600 pl-2 py-1">
+                <span className="text-gray-600 mr-2">[{i + 1}]</span>
                 {log}
-                <span className="opacity-50 ml-2">&lt;</span>
               </div>
             ))}
             <div ref={logsEndRef} />
           </div>
-        </div>
-      </div>
 
-      {/* メインエリア */}
-      <div className="absolute bottom-0 left-0 w-full h-full flex flex-col justify-end pb-4 px-4 md:pb-8 md:px-12 z-20 pointer-events-none">
-        <div className="w-full flex flex-col items-center gap-3 mb-6 pointer-events-auto">
-          {currentScene.choices.map((choice, index) => {
-            if (choice.condition && !choice.condition(status)) return null;
-            return (
-              <button
-                key={index}
-                onClick={() => handleChoice(choice)}
-                className="w-full max-w-xl bg-indigo-900/90 hover:bg-indigo-600 text-white py-3 px-6 rounded-lg border border-indigo-400/50 shadow-lg transition-all transform hover:scale-105 flex justify-between items-center group backdrop-blur-sm"
-              >
-                <span className="font-bold text-base md:text-lg group-hover:text-yellow-200">{choice.text}</span>
-                {choice.skillCheck && (
-                  <span className="text-xs bg-black/50 px-2 py-1 rounded text-cyan-300 border border-cyan-700 ml-2 whitespace-nowrap">
-                    {choice.skillCheck.skillName} {choice.skillCheck.targetValue}%
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="w-full max-w-5xl mx-auto bg-black/85 border-2 border-gray-600 rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-md min-h-[180px] md:min-h-[200px] relative pointer-events-auto">
-          <div className="absolute -top-4 left-6 md:left-10 bg-indigo-600 px-6 py-1 rounded-full text-sm md:text-base font-bold shadow-lg border border-indigo-400">
-            アベンチュリン
+          {/* 選択肢エリア */}
+          <div className="p-6 bg-gray-800">
+            <div className="space-y-3">
+              {currentScene.choices.map((choice, index) => {
+                // 条件判定 (conditionがある場合、falseなら表示しない)
+                if (choice.condition && !choice.condition(status)) {
+                  return null;
+                }
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleChoice(choice)}
+                    className="w-full p-4 text-left bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-lg transition-all transform hover:translate-x-1 shadow-lg border border-indigo-500/30 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{choice.text}</span>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-200">
+                        →
+                      </span>
+                    </div>
+                    {choice.skillCheck && (
+                      <div className="text-xs text-indigo-200 mt-1 flex items-center gap-1">
+                        <span className="bg-indigo-900/50 px-1.5 py-0.5 rounded">
+                          🎲 {choice.skillCheck.skillName}
+                        </span>
+                        <span>目標: {choice.skillCheck.targetValue}%</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <p className="text-base md:text-xl leading-relaxed whitespace-pre-wrap text-gray-100 font-medium">
-            {displayText}
-          </p>
+
         </div>
       </div>
-
     </div>
   );
 };

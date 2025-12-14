@@ -1,3 +1,4 @@
+// src/hooks/useTRPG.ts
 'use client';
 
 import { useState } from 'react';
@@ -11,19 +12,12 @@ export const useTRPG = () => {
     affection: 0,
     otakuLevel: 0,
     items: [],
+    skills: [], // ★追加: 初期は空
     turn: 0,
     clearedEndings: [],
     loopCount: 1,
-    // 初期値
-    str: 0,
-    dex: 0,
-    pow: 0,
-    app: 0,
   });
 
-  // キャラクター作成済みかどうか
-  const [isCharacterCreated, setIsCharacterCreated] = useState(false);
-  
   const [currentSceneId, setCurrentSceneId] = useState<string>('start');
   const [logs, setLogs] = useState<string[]>(['ゲーム開始']);
 
@@ -60,23 +54,23 @@ export const useTRPG = () => {
     }
   };
 
-  // キャラクター初期化関数
-  const initCharacter = (stats: { str: number; dex: number; pow: number; app: number }) => {
-    setStatus(prev => ({
-      ...prev,
-      ...stats,
-      san: stats.pow * 5, // POW * 5 をSAN値の初期値とする
-    }));
-    setIsCharacterCreated(true);
-    setLogs(prev => [...prev, `キャラクター作成完了: STR${stats.str} DEX${stats.dex} POW${stats.pow} APP${stats.app}`]);
+  // ★追加: 初期ステータスを上書きする関数
+  const setInitialStatus = (initial: Partial<GameStatus>) => {
+    setStatus(prev => ({ ...prev, ...initial }));
   };
 
   const handleChoice = (choice: Choice) => {
     if (choice.skillCheck) {
       let { skillName, targetValue, successSceneId, failureSceneId } = choice.skillCheck;
       
+      // オタク度による補正
       if (skillName === '情熱' || skillName === '言いくるめ') {
         targetValue += status.otakuLevel * 5;
+      }
+
+      // ★追加: 習得済み技能によるボーナス (例: +20%)
+      if (status.skills.includes(skillName)) {
+        targetValue += 20;
       }
 
       const { result, value } = rollDice(targetValue);
@@ -115,7 +109,6 @@ export const useTRPG = () => {
     currentScene,
     logs,
     handleChoice,
-    isCharacterCreated,
-    initCharacter
+    setInitialStatus // ★追加: エクスポート
   };
 };

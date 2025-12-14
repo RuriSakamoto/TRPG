@@ -1,18 +1,22 @@
+// src/types/game.ts
+
 export type GameStatus = {
   hp: number;
   san: number;
   affection: number;
   otakuLevel: number;
   items: string[];
+  skills: string[]; // ★追加: 習得している技能のリスト
   turn: number;
   clearedEndings: string[];
   loopCount: number;
-  // 新規追加ステータス
-  str: number;
-  dex: number;
-  pow: number;
-  app: number;
 };
+
+// ★追加: 利用可能な技能の定数リスト
+export const AVAILABLE_SKILLS = [
+  '目星', '聞き耳', '図書館', '隠れる', '忍び歩き',
+  '心理学', '説得', '言いくるめ', 'オカルト', 'コンピューター', '情熱'
+];
 
 export type RollResult = 'critical' | 'success' | 'failure' | 'fumble';
 
@@ -32,7 +36,7 @@ export type Choice = {
 export type Scene = {
   id: string;
   text: string;
-  backgroundImage?: string; // 背景画像のパス (例: '/bg/office.jpg')
-  characterImage?: string;  // 立ち絵画像のパス (例: '/chara/ratio_angry.png')
+  backgroundImage?: string;
+  characterImage?: string;
   choices: Choice[];
 };
