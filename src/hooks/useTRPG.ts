@@ -100,6 +100,12 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
         choice.skillCheck.targetValue
       );
 
+      // action関数がある場合は先に実行してステータスを更新
+      if (choice.action) {
+        const actionUpdates = choice.action(status);
+        updateStatus(actionUpdates);
+      }
+
       // 成功/失敗に応じた処理
       if (result.success && choice.skillCheck.onSuccess) {
         const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onSuccess);
@@ -118,7 +124,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       }
     } else {
       // 通常の選択肢処理
-      let updates: Partial<GameStatus> = { ...status };
+      let updates: Partial<GameStatus> = {};
 
       // action関数がある場合は実行
       if (choice.action) {
@@ -155,7 +161,10 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
         }
       }
 
-      updateStatus(updates);
+      // ステータスを更新
+      if (Object.keys(updates).length > 0) {
+        updateStatus(updates);
+      }
 
       // 結果テキストをログに追加
       if (choice.result) {
@@ -181,9 +190,6 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
         }
       }
     }
-
-    // ターン数を増やす処理を削除（各シーンのaction関数で管理）
-    // updateStatus({ turn: (status.turn || 0) + 1 });
   };
 
   const resetGame = () => {
