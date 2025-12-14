@@ -1,303 +1,331 @@
 import { Scene } from '../../types/game';
 
-export const chapter2: Scene[] = [
+export const chapter3: Scene[] = [
   {
-    id: 'chap2_intro_safe',
-    title: '第2章：ベリタス・レイシオの恋人は…',
-    description: '祭壇が発見されてしまった',
-    text: '【第2章：ベリタス・レイシオの恋人は…】\n\nあの日から数日後。\nリビングでくつろいでいると、レイシオが分厚いファイルを持って現れた。\n「アベンチュリン。君の部屋の清掃業者が、ベッドの下から『奇妙な祭壇』を発見したと報告があった」\n\n……詰んだ。',
+    id: 'chap3_intro',
+    title: '第3章:解釈違いのPV撮影',
+    description: 'カンパニー広報部からの依頼',
+    text: '【第3章:解釈違いのPV撮影】\n\nカンパニー広報部からの依頼。\nそれは、アベンチュリンにとって悪夢の始まりだった。\n\n撮影当日。スタジオの楽屋。\n「……この衣装はなんだ」\nレイシオが不満げに自身の衣装を見下ろしている。\nフリル満載のアイドル風スーツだ。',
     choices: [
       { 
-        text: '【心理学判定】彼の本心を読む', 
-        nextScene: 'chap2_lie_check',
+        text: '【目星判定】衣装の問題点を分析する', 
+        nextScene: 'chap3_costume_angry',
         skillCheck: {
-          skillName: '心理学',
-          onSuccess: 'chap2_psychology_success',
-          onFailure: 'chap2_psychology_fail'
+          skillName: '目星',
+          onSuccess: 'chap3_costume_analysis',
+          onFailure: 'chap3_costume_lie'
         }
       },
-      { text: '「それは魔除けだよ」と嘘をつく', nextScene: 'chap2_lie_check' },
-      { text: '素直に認めて土下座する', nextScene: 'chap2_dogeza' }
+      { text: '「似合ってるよ（棒読み）」', nextScene: 'chap3_costume_lie' },
+      { text: '「今すぐ脱いで！解釈違いだ！」', nextScene: 'chap3_costume_angry' }
     ]
   },
   {
-    id: 'chap2_psychology_success',
-    title: '本心を見抜く',
-    description: 'レイシオは困惑しているだけだった',
-    text: 'レイシオの表情を注意深く観察する…\n\n眉間のシワ、口元の微かな動き、視線の動き…\n\n「……待って。これ、怒っているんじゃない。困惑している？」\n\n彼は本当に理解できないだけなのだ。\n「どうやら、正直に話せば理解してくれるかもしれない」',
+    id: 'chap3_costume_analysis',
+    title: '的確な分析',
+    description: '衣装の問題点を指摘',
+    text: '衣装を注意深く観察する…\n\n「待って、これは完全に解釈違いだ！」\n「レイシオのキャラクター性を無視している。彼はシンプルで機能的な服を好むはずだ」\n「それに、このフリルは彼の知的なイメージを損なう」\n\n君の的確な分析に、レイシオは少し驚いた様子だ。\n「……よく分かっているな。その通りだ」',
     choices: [
       { 
-        text: '正直に話す', 
-        nextScene: 'chap2_dogeza',
+        text: '監督に抗議する', 
+        nextScene: 'chap3_costume_angry',
         action: (s) => ({ ...s, affection: s.affection + 2 })
       }
     ]
   },
   {
-    id: 'chap2_psychology_fail',
-    title: '誤読',
-    description: 'レイシオの表情を読み間違えた',
-    text: 'レイシオの表情を読もうとしたが…\n\n「……完全に怒っている！ これは言い訳するしかない！」\n\n（実際は困惑していただけだが、誤読してしまった）',
-    choices: [
-      { text: '慌てて言い訳する', nextScene: 'chap2_lie_check' }
-    ]
-  },
-  {
-    id: 'chap2_lie_check',
-    title: '墓穴を掘る',
-    description: '言い訳が裏目に出た',
-    text: '「魔除け？ ほう…僕の写真が魔除けになると？」\nレイシオは眉をひそめた。\n「つまり君にとって僕は、魔物よりも恐ろしい存在ということか？」\n\n墓穴を掘った。彼の機嫌が目に見えて悪くなっている。',
+    id: 'chap3_costume_lie',
+    title: '信頼度低下',
+    description: 'お世辞が裏目に出た',
+    text: '「似合ってるよ、レイシオ。王子様みたいだ」\n「……君の目は節穴か？ どう見ても道化だ」\nレイシオは不機嫌そうだ。信頼度が下がった気がする。',
     choices: [
       { 
-        text: '【言いくるめ判定】詭弁で煙に巻く', 
-        nextScene: 'chap2_debate_start',
-        skillCheck: {
-          skillName: '言いくるめ',
-          targetValue: 50,
-          onSuccess: 'chap2_fastalk_success',
-          onFailure: 'chap2_fastalk_fail'
-        }
-      },
-      { 
-        text: '必死に弁解する', 
-        nextScene: 'chap2_debate_start', 
+        text: 'リハーサルへ', 
+        nextScene: 'chap3_wink_check', 
         action: (s) => ({ ...s, affection: s.affection - 1 }) 
       }
     ]
   },
   {
-    id: 'chap2_fastalk_success',
-    title: '詭弁成功',
-    description: '何とか誤魔化せた',
-    text: '「違う違う！ 魔除けじゃなくて『守護神』だよ！」\n「君の写真があれば、どんな困難も乗り越えられる気がするんだ！」\n\nレイシオは目を細めた。\n「……詭弁だな。だが、まあいい」\n\n何とか誤魔化せた！',
+    id: 'chap3_costume_angry',
+    title: '意気投合',
+    description: 'レイシオと意見が一致',
+    text: '「だよね！？ レイシオはもっとこう、シンプルで知的な装いが至高なんだよ！」\n意気投合した二人だが、監督は止まらない。\n\n「じゃあリハいきまーす！ まずは『ウィンク』の練習ね！」\n「レイシオちゃん、カメラに向かってバチコーン！とお願い！」\n\n地獄のリハーサルが始まった。',
     choices: [
-      { text: 'プレゼンを開始する', nextScene: 'chap2_debate_start' }
+      { text: 'レイシオのウィンクを見る', nextScene: 'chap3_wink_check' }
     ]
   },
   {
-    id: 'chap2_fastalk_fail',
-    title: '言い訳失敗',
-    description: '支離滅裂な弁解',
-    text: '「いや、その…魔除けというか、お守りというか…」\n「言い訳が支離滅裂だぞ、アベンチュリン」\n\nレイシオの冷たい視線が突き刺さる。',
+    id: 'chap3_wink_check',
+    title: 'ウィンクの練習',
+    description: 'ぎこちないウィンク',
+    text: 'レイシオは苦虫を噛み潰したような顔で、ぎこちなく片目を閉じた。\nパチッ。',
     choices: [
       { 
-        text: '必死に弁解する', 
-        nextScene: 'chap2_debate_start', 
-        action: (s) => ({ ...s, affection: s.affection - 2, san: s.san - 5 }) 
+        text: '尊すぎて倒れる', 
+        nextScene: 'chap3_rehearsal_2',
+        action: (s) => ({ ...s, san: s.san - 10 })
+      },
+      { 
+        text: '「下手すぎて可愛い」と笑う', 
+        nextScene: 'chap3_rehearsal_2',
+        action: (s) => ({ ...s, affection: s.affection - 1 })
       }
     ]
   },
   {
-    id: 'chap2_dogeza',
-    title: '土下座',
-    description: '素直に謝罪する',
-    text: '床に額をこすりつけた。\n「ごめん、教授！ 君が尊すぎてつい！」\n\n「……はぁ」\n深い溜息が降ってくる。\n「顔を上げろ。怒っているわけではない。ただ、理解ができないだけだ」\n\n彼はファイルを机に置いた。\n「君のその『推し活』とやらの定義と、僕へのメリットを説明しろ。納得できれば許容する」',
+    id: 'chap3_rehearsal_2',
+    title: '壁ドンの練習',
+    description: '恥ずかしい演出',
+    text: '「次は『壁ドン』だ！ アベンチュリンちゃんを壁に追い詰めて、甘い言葉を囁いて！」\n\nレイシオが君に近づく。\nその顔は真っ赤だ。\n「……なぜ僕がこんなことを」\n「仕事だからね、レイシオ…（僕も恥ずかしい）」',
     choices: [
-      { text: 'プレゼンを開始する', nextScene: 'chap2_debate_start' }
+      { text: '本番へ挑む', nextScene: 'chap3_studio' }
     ]
   },
+
+  // --- 運命の分岐点 ---
   {
-    id: 'chap2_debate_start',
-    title: 'Round 1: グッズについて',
-    description: 'レイシオとの論戦が始まった',
-    text: '「第一の議題。君が収集している『グッズ』についてだ」\nレイシオは押収品リストを読み上げた。\n「アクリルスタンド、缶バッジ、抱き枕……これらは単なるプラスチックと布だ。これに大金を投じる合理的理由はあるのか？」',
+    id: 'chap3_studio',
+    title: '本番撮影',
+    description: '運命の分岐点',
+    text: 'いよいよ本番。\n監督の要求はエスカレートしていく。\n「もっと密着して！ 恋人繋ぎして！」\n\nレイシオの我慢も限界に近い。\n君の「解釈違いメーター」も爆発寸前だ。\nどうする？',
     choices: [
-      { 
-        text: '【説得判定】論理的に説明する', 
-        nextScene: 'chap2_round1_win',
+      {
+        text: '【芸術判定】解釈一致の演出を提案する',
+        nextScene: 'end_true_route',
         skillCheck: {
-          skillName: '説得',
-          onSuccess: 'chap2_persuade_success',
-          onFailure: 'chap2_round1_lose'
+          skillName: '芸術',
+          onSuccess: 'chap3_art_success',
+          onFailure: 'chap3_revolt'
         }
       },
-      { 
-        text: '「保存用、観賞用、布教用だ！」', 
-        nextScene: 'chap2_round1_win',
-        condition: (s) => s.otakuLevel >= 3
-      },
-      { 
-        text: '「予備がないと不安だから…」', 
-        nextScene: 'chap2_round1_lose'
-      }
-    ]
-  },
-  {
-    id: 'chap2_persuade_success',
-    title: '完璧なプレゼン',
-    description: '論理的な説明で納得させた',
-    text: '「これは投資だよ、教授」\n君は冷静に説明を始めた。\n\n「グッズは資産価値がある。限定品は市場で高値で取引される」\n「それに、精神的安定による生産性向上も見込める」\n「つまり、合理的な自己投資なんだ」\n\nレイシオは目を見開いた。\n「……なるほど。君がそこまで考えているとは思わなかった」\n\n完璧なプレゼンだった！',
-    choices: [
-      { 
-        text: '第2ラウンドへ', 
-        nextScene: 'chap2_round2', 
-        action: (s) => ({ ...s, affection: s.affection + 3 }) 
-      }
-    ]
-  },
-  {
-    id: 'chap2_round1_win',
-    title: 'Round 1 勝利',
-    description: 'オタクの常識で押し切った',
-    text: '「保存用、観賞用、布教用…？」\nレイシオは眉をひそめたが、少し考え込んだ。\n「…リスク管理（予備）と、マーケティング（布教）の観点か。非合理的だが、目的意識は明確だな」\n\nよし、納得させた（？）ぞ！',
-    choices: [
-      { 
-        text: '第2ラウンドへ', 
-        nextScene: 'chap2_round2', 
-        action: (s) => ({ ...s, affection: s.affection + 1 }) 
-      }
-    ]
-  },
-  {
-    id: 'chap2_round1_lose',
-    title: 'Round 1 敗北',
-    description: '一蹴されてしまった',
-    text: '「不安？ 非論理的だ」\n一蹴された。\n「君の精神的未熟さが露呈したな」',
-    choices: [
-      { 
-        text: '第2ラウンドへ', 
-        nextScene: 'chap2_round2', 
-        action: (s) => ({ ...s, san: s.san - 5 }) 
-      }
-    ]
-  },
-  {
-    id: 'chap2_round2',
-    title: 'Round 2: 隠し撮り写真',
-    description: 'プライバシー侵害の弁明',
-    text: '【Round 2: 隠し撮り写真】\n\n「次はこれだ。僕の寝顔の写真」\nレイシオの目が座っている。\n「これは明白なプライバシーの侵害だ。弁明の余地はあるか？」',
-    choices: [
-      { 
-        text: '【オカルト判定】「推し活は現代の宗教儀式」と説明', 
-        nextScene: 'chap2_round2_check',
+      {
+        text: '【情熱判定】オタクの魂で現場を制圧する',
+        nextScene: 'chap3_revolt',
         skillCheck: {
-          skillName: 'オカルト',
-          onSuccess: 'chap2_occult_success',
-          onFailure: 'chap2_round2_lose'
+          skillName: '情熱',
+          onSuccess: 'chap3_passion_win',
+          onFailure: 'chap3_passion_lose'
         }
       },
-      { 
-        text: '【言いくるめ判定】「君の美しさは公共の利益だ」', 
-        nextScene: 'chap2_round2_check',
-        skillCheck: { 
-          skillName: '言いくるめ', 
-          targetValue: 60, 
-          onSuccess: 'chap2_round2_win', 
-          onFailure: 'chap2_round2_lose' 
+      {
+        text: '【幸運判定】奇跡的に良いカットが撮れることを祈る',
+        nextScene: 'end_normal_route',
+        skillCheck: {
+          skillName: '幸運',
+          onSuccess: 'chap3_luck_success',
+          onFailure: 'end_normal_route'
         }
       },
+      {
+        text: '「いくらだ？ このスタジオごと買い取る」',
+        nextScene: 'end_ceo_route',
+        condition: (s) => s.otakuLevel >= 7
+      },
+      {
+        text: 'レイシオの手を引いて逃走する',
+        nextScene: 'end_secret_route',
+        condition: (s) => s.loopCount >= 2 && s.affection >= 8
+      },
       { 
-        text: '素直に謝る', 
-        nextScene: 'chap2_round2_lose'
+        text: '仕事だと割り切って耐える', 
+        nextScene: 'end_normal_route'
+      },
+      {
+        text: 'あまりの解釈違いに気絶する',
+        nextScene: 'end_bad_route',
+        action: (s) => ({ ...s, san: 0 })
+      }
+    ]
+  },
+
+  // --- 芸術判定ルート ---
+  {
+    id: 'chap3_art_critical',
+    title: '天才的な提案',
+    description: '即興で絵コンテを描く',
+    text: '「待ってください！」\n君は監督の前に立ちはだかった。\n\n「この演出では、レイシオの本質が伝わりません」\n「彼の魅力は、知性と情熱です。それを表現するには…」\n\n君は即興で絵コンテを描き始めた。\nレイシオが黒板の前で講義をする姿。\nチョークを握る手。真剣な眼差し。\n\n「……これだ！ 天才か君は！」\n監督が目を輝かせた。',
+    choices: [
+      { 
+        text: '新しい演出で撮影開始', 
+        nextScene: 'end_true_route',
+        action: (s) => ({ ...s, affection: s.affection + 5 })
       }
     ]
   },
   {
-    id: 'chap2_occult_success',
-    title: '学術的アプローチ',
-    description: '宗教学的な説明が功を奏した',
-    text: '「教授、これは宗教学的に見て正当な行為なんだ」\n君は真剣な表情で説明を始めた。\n\n「古来より、人々は崇拝対象の像を作り、それを拝んできた」\n「推し活も同じ。現代における信仰の形なんだよ」\n\nレイシオは呆れた顔をしたが、少し興味を持ったようだ。\n「……宗教学か。まあ、一理あるな」\n\n学術的アプローチが功を奏した！',
+    id: 'chap3_art_success',
+    title: '代替案の提示',
+    description: 'シンプルな演出を提案',
+    text: '「監督、提案があります」\n君は代替案を提示した。\n\n「レイシオの魅力を活かすなら、もっとシンプルな演出がいいと思います」\n「例えば、研究室で本を読むシーンとか…」\n\n監督は少し考え込んだ。\n「……悪くないわね。試してみましょう」',
     choices: [
       { 
-        text: '最終ラウンドへ', 
-        nextScene: 'chap2_round3',
+        text: '撮影を続ける', 
+        nextScene: 'end_true_route',
         action: (s) => ({ ...s, affection: s.affection + 2 })
       }
     ]
   },
+
+  // --- 情熱判定ルート ---
   {
-    id: 'chap2_round2_win',
-    title: 'Round 2 勝利',
-    description: '押し切った',
-    text: '「公共の利益…？ 僕の顔が？」\n「そうだよレイシオ。君の顔を見ると、みんな幸せになる。これは社会貢献なんだ」\n「……君の頭の中はどうなっているんだ」\n\n呆れられたが、写真は没収されなかった。押し切った！',
-    choices: [
-      { text: '最終ラウンドへ', nextScene: 'chap2_round3' }
-    ]
-  },
-  {
-    id: 'chap2_round2_lose',
-    title: 'Round 2 敗北',
-    description: '写真を削除させられた',
-    text: '「却下だ。削除しろ」\nその場でデータを消去させられた。\nああ、僕の宝物が……。',
-    choices: [
-      { 
-        text: '最終ラウンドへ', 
-        nextScene: 'chap2_round3', 
-        action: (s) => ({ ...s, san: s.san - 10 }) 
-      }
-    ]
-  },
-  {
-    id: 'chap2_round2_check',
-    title: 'Round 2 継続',
-    description: '次のラウンドへ',
-    text: 'レイシオとの論戦は続く…',
-    choices: [
-      { text: '最終ラウンドへ', nextScene: 'chap2_round3' }
-    ]
-  },
-  {
-    id: 'chap2_round3',
-    title: 'Final Round: 愛か執着か',
-    description: '最後の論戦',
-    text: '【Final Round: 愛か執着か】\n\n「最後だ。アベンチュリン」\nレイシオは真剣な眼差しで君を見た。\n「君のこれは、愛ではない。ただの執着だ。依存だ」\n「そんな不健全な関係を、僕は認めるわけにはいかない」\n\n彼の言葉は正論だ。だが、ここで引くわけにはいかない。',
-    choices: [
-      { 
-        text: '【情熱判定】オタクの魂を燃やす', 
-        nextScene: 'chap2_final_passion',
-        skillCheck: {
-          skillName: '情熱',
-          onSuccess: 'chap2_passion_critical',
-          onFailure: 'chap2_final_passion'
-        }
-      },
-      { 
-        text: '「執着こそが愛の純度だ！」と叫ぶ', 
-        nextScene: 'chap2_final_passion',
-        condition: (s) => s.otakuLevel >= 5
-      },
-      { 
-        text: '「……それでも、好きなんだ」と呟く', 
-        nextScene: 'chap2_final_sincere'
-      }
-    ]
-  },
-  {
-    id: 'chap2_passion_critical',
+    id: 'chap3_passion_critical',
     title: '魂の叫び',
-    description: '全力の告白',
-    text: '「違う！ これは執着じゃない！」\n君の声が部屋に響き渡る。\n\n「君の論文を読んで感動した。君の講義を聞いて尊敬した」\n「君の不器用な優しさに気づいて、好きになった」\n「これは依存じゃない。君という人間を、全力で愛しているんだ！」\n\nレイシオは完全に言葉を失った。\n彼の頬が、微かに赤く染まっている。\n\n「……参った。完全に、君の勝ちだ」',
+    description: '現場に響き渡る熱弁',
+    text: '「違う！ 全部違う！！」\n君の叫びが撮影現場に響き渡る。\n\n「レイシオは、こんな薄っぺらいキャラじゃない！」\n「彼の知性、彼の誇り、彼の不器用な優しさ！」\n「それを理解せずに、表面だけを撮ろうとするな！」\n\n君の熱量に、現場が静まり返った。\n監督も、スタッフも、言葉を失っている。\n\nレイシオが君の肩に手を置いた。\n「……ありがとう、アベンチュリン」',
     choices: [
       { 
-        text: '第3章へ', 
-        nextScene: 'chap3_intro', 
-        action: (s) => ({ ...s, affection: s.affection + 10, otakuLevel: s.otakuLevel + 3 }) 
+        text: '新しい撮影を始める', 
+        nextScene: 'end_true_route',
+        action: (s) => ({ ...s, affection: s.affection + 7, otakuLevel: s.otakuLevel + 5 })
       }
     ]
   },
   {
-    id: 'chap2_final_passion',
-    title: '開き直り',
-    description: '狂気の愛を宣言',
-    text: '「執着上等！ 依存上等！ 君なしじゃ生きられない、それが僕の愛だ！」\n開き直った君の勢いに、レイシオは目を丸くした。\n「……狂っているな。だが、そこまで言い切るとは」\n「いいだろう。その狂気、僕が引き受けてやる」',
+    id: 'chap3_passion_win',
+    title: '熱弁',
+    description: 'レイシオの魅力を語る',
+    text: '「もう我慢できない！ レイシオの魅力はこんなんじゃない！」\n君の熱弁に、監督が少し引いている。\n\n「え、ええと…じゃあどうすれば…？」\n「レイシオに講義をさせてください！ それが一番輝くんです！」',
     choices: [
       { 
-        text: '第3章へ', 
-        nextScene: 'chap3_intro', 
-        action: (s) => ({ ...s, affection: s.affection + 5 }) 
+        text: '撮影方針を変更する', 
+        nextScene: 'end_true_route',
+        action: (s) => ({ ...s, affection: s.affection + 3 })
       }
     ]
   },
   {
-    id: 'chap2_final_sincere',
-    title: '静かな告白',
-    description: '理屈じゃない愛',
-    text: '「……それでも、好きなんだ。理屈じゃないよ、レイシオ」\n\n静かな部屋に、君の声が響いた。\nレイシオは大きく目を見開き、それからふっと力を抜いた。\n\n「……はぁ。理屈じゃない、か」\n「学者相手に一番言ってはいけない言葉だが……今回だけは不問にしよう」\n\n彼はファイルを閉じた。\n「勝負は君の勝ちだ。好きにするがいい」',
+    id: 'chap3_passion_lose',
+    title: '訴え失敗',
+    description: '軽くあしらわれた',
+    text: '「レイシオの魅力が…全然伝わってない…！」\n君は必死に訴えたが、声が震えている。\n\n「はいはい、オタクさんの意見は聞いたから」\n監督に軽くあしらわれてしまった。',
     choices: [
       { 
-        text: '第3章へ', 
-        nextScene: 'chap3_intro', 
-        action: (s) => ({ ...s, affection: s.affection + 3 }) 
+        text: '悔しさを噛み締める', 
+        nextScene: 'chap3_revolt',
+        action: (s) => ({ ...s, san: s.san - 5 })
+      }
+    ]
+  },
+
+  // --- 幸運判定ルート ---
+  {
+    id: 'chap3_luck_success',
+    title: '奇跡の一枚',
+    description: '偶然の傑作',
+    text: 'その時、奇跡が起きた。\n\nレイシオが台本を読んでいる瞬間、カメラが偶然彼を捉えた。\n真剣な表情で文字を追う横顔。\n知的で、美しく、まさに「レイシオらしい」一枚。\n\n「……これよ！ これが欲しかったの！」\n監督が歓喜の声を上げた。',
+    choices: [
+      { 
+        text: 'この路線で撮影を続ける', 
+        nextScene: 'end_true_route',
+        action: (s) => ({ ...s, affection: s.affection + 2 })
+      }
+    ]
+  },
+
+  // --- True End ルート ---
+  {
+    id: 'chap3_revolt',
+    title: '反逆',
+    description: 'セットを破壊',
+    text: '「ふざけるな！ レイシオはアイドルじゃない、学者だ！」\n君はセットを破壊した（物理）。\n「……よく言った、賭博師」\nレイシオがニヤリと笑った。\n「私も同感だ。こんな茶番は終わりにしよう」',
+    choices: [
+      { text: 'True Endへ', nextScene: 'end_true_route' }
+    ]
+  },
+  {
+    id: 'end_true_route',
+    title: 'True End: 究極の解釈一致',
+    description: '最高の結末',
+    text: '【True End: 究極の解釈一致】\n\n結局、PVはレイシオの主導で作り直された。\n完成したのは、ただひたすらに彼が講義をするだけの映像。\nだが、その眼差しは真剣で、美しかった。\n\n「これで満足か、ギャンブラー」\n「ああ、最高だ。これこそが僕の推しだよ」\n\n君のコレクションに、また一つ至高の映像が加わった。\n（クリア特典：タイトル画面に「True End」バッジ追加）',
+    choices: [
+      { 
+        text: 'キャラクター作成へ戻る', 
+        nextScene: 'character_creation', 
+        action: (s) => ({ 
+          ...s,
+          hp: 10, san: 60, affection: 0, items: [], skills: [], skillValues: {}, otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'true_end'],
+          loopCount: s.loopCount + 1
+        }) 
+      }
+    ]
+  },
+
+  // --- CEO End ルート ---
+  {
+    id: 'end_ceo_route',
+    title: 'CEO End: 資本主義の勝利',
+    description: '金の力で解決',
+    text: '【CEO End: 資本主義の勝利】\n\n「うるさいな。この企画、僕が買い取るよ」\n君はブラックカードを取り出した。\n\n数分後、スタジオのオーナーは君になった。\n「さあレイシオ、僕の指示通りに動いてくれ。最高の映像を撮ろう」\n「……やれやれ。監督が君なら、少しはマシになるか」\n\n完成したPVは、君の性癖が詰め込まれたマニアックな傑作となった。\n（クリア特典：タイトル画面に「CEO」バッジ追加）',
+    choices: [
+      { 
+        text: 'キャラクター作成へ戻る', 
+        nextScene: 'character_creation', 
+        action: (s) => ({ 
+          ...s,
+          hp: 10, san: 60, affection: 0, items: [], skills: [], skillValues: {}, otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'ceo_end'],
+          loopCount: s.loopCount + 1
+        }) 
+      }
+    ]
+  },
+  // --- Secret End ルート ---
+  {
+    id: 'end_secret_route',
+    title: 'Secret End: 秘密の補習',
+    description: '二人だけの時間',
+    text: '【Secret End: 秘密の補習】\n\n「付き合いきれん。帰るぞ」\n君はレイシオの手を引き、スタジオを飛び出した。\n\n「おい、どこへ行く気だ」\n「君の研究室だよ。二人きりで、個人的な講義（ファンサ）をしてくれるんだろ？」\n\nレイシオは呆れたように笑った。\n「……高くつくぞ」\n\nその後の二人の時間は、誰にも邪魔されることはなかった。\n（クリア特典：タイトル画面に「Secret」バッジ追加）',
+    choices: [
+      { 
+        text: 'キャラクター作成へ戻る', 
+        nextScene: 'character_creation', 
+        action: (s) => ({ 
+          ...s,
+          hp: 10, san: 60, affection: 0, items: [], skills: [], skillValues: {}, otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'secret_end'],
+          loopCount: s.loopCount + 1
+        }) 
+      }
+    ]
+  },
+
+  // --- Normal End ルート ---
+  {
+    id: 'end_normal_route',
+    title: 'Normal End: 妥協と供給',
+    description: '複雑な気持ち',
+    text: '【Normal End: 妥協と供給】\n\n君は唇を噛み締めて耐えた。\n撮影は強行され、レイシオはぎこちなくウィンクをした。\n\n完成したPVは、キラキラしたエフェクト満載のアイドル動画だった。\n世間では「ギャップ萌え」と大好評で、再生数は100億回を突破した。\n\n「……まあ、顔が良いから許すか」\n解釈違いだが、供給は供給だ。\n君は複雑な気持ちで「いいね」を押した。',
+    choices: [
+      { 
+        text: 'キャラクター作成へ戻る', 
+        nextScene: 'character_creation', 
+        action: (s) => ({ 
+          ...s,
+          hp: 10, san: 60, affection: 0, items: [], skills: [], skillValues: {}, otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'normal_end'],
+          loopCount: s.loopCount + 1
+        }) 
+      }
+    ]
+  },
+  // --- Bad End ルート ---
+  {
+    id: 'end_bad_route',
+    title: 'Bad End: 虚無',
+    description: '推しへの熱が冷める',
+    text: '【Bad End: 虚無】\n\nプツン。\n君の中で何かが切れた。\n\n「違う……僕の好きなレイシオはこんなんじゃない……」\n\nあまりのショックに、君は寝込んだ。\n後日公開されたPVを見る気力もなく、ファンクラブの更新も忘れてしまった。\n推しへの熱が、急速に冷めていくのを感じながら……。',
+    choices: [
+      { 
+        text: 'キャラクター作成へ戻る', 
+        nextScene: 'character_creation', 
+        action: (s) => ({ 
+          ...s,
+          hp: 10, san: 60, affection: 0, items: [], skills: [], skillValues: {}, otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'bad_end'],
+          loopCount: s.loopCount + 1
+        }) 
       }
     ]
   }

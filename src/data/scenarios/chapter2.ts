@@ -1,6 +1,6 @@
 import { Scene } from '../../types/game';
 
-export const chapter2: Scene[] = [
+export const chapter3: Scene[] = [
   {
     id: 'chap2_intro_safe',
     title: '第2章：ベリタス・レイシオの恋人は…',
