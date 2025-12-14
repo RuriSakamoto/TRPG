@@ -2,24 +2,24 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useTRPG } from '../hooks/useTRPG';
+import { CharacterCreation } from './CharacterCreation';
 
 export const GameScreen = () => {
-  const { status, currentScene, logs, handleChoice } = useTRPG();
+  const { status, currentScene, currentSceneId, logs, handleChoice, completeCharacterCreation } = useTRPG();
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
+  // ★キャラメイク画面への分岐
+  if (currentSceneId === 'character_creation') {
+    return <CharacterCreation onComplete={completeCharacterCreation} />;
+  }
+
   if (!currentScene) return <div className="text-white p-10">Loading...</div>;
 
-  const bgStyle = currentScene.backgroundImage
-    ? { backgroundImage: `url(${currentScene.backgroundImage})` }
-    : { backgroundColor: '#1a1a2e' };
-
-  // ... (前略)
-
-  // ★追加: ターン数から時刻を計算する関数 (1ターン30分経過)
+  // ターン数から時刻を計算 (1ターン30分経過)
   const getCurrentTime = () => {
     const startHour = 21;
     const minutesPerTurn = 30;
@@ -31,25 +31,11 @@ export const GameScreen = () => {
     return `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
   };
 
-  // ★追加: テキスト内の {{TIME}} を現在の時刻に置き換える
   const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
 
-  return (
-    <div ... >
-      {/* ... (中略) ... */}
-
-      {/* メッセージウィンドウ部分の修正 */}
-      <div className="...">
-        {/* ... */}
-        <p className="text-base md:text-xl leading-relaxed whitespace-pre-wrap text-gray-100 font-medium">
-          {/* currentScene.text ではなく displayText を使う */}
-          {displayText}
-        </p>
-      </div>
-    </div>
-  );
-};
-
+  const bgStyle = currentScene.backgroundImage
+    ? { backgroundImage: `url(${currentScene.backgroundImage})` }
+    : { backgroundColor: '#1a1a2e' };
 
   return (
     <div 
@@ -86,7 +72,7 @@ export const GameScreen = () => {
         </div>
       </div>
 
-      {/* --- ログウィンドウ (右側サイドバー) --- */}
+      {/* ログウィンドウ (右側サイドバー) */}
       <div className="absolute top-20 right-0 w-64 h-[calc(100vh-300px)] z-10 pointer-events-none hidden md:flex flex-col items-end pr-4">
         <div className="w-full h-full bg-gradient-to-l from-black/80 to-transparent border-r-4 border-green-900/30 rounded-l-xl p-4 flex flex-col shadow-lg backdrop-blur-sm overflow-hidden">
           <div className="text-xs text-green-500 font-bold border-b border-green-900/50 pb-2 mb-2 text-right">
@@ -130,10 +116,10 @@ export const GameScreen = () => {
         {/* メッセージウィンドウ */}
         <div className="w-full max-w-5xl mx-auto bg-black/85 border-2 border-gray-600 rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-md min-h-[180px] md:min-h-[200px] relative pointer-events-auto">
           <div className="absolute -top-4 left-6 md:left-10 bg-indigo-600 px-6 py-1 rounded-full text-sm md:text-base font-bold shadow-lg border border-indigo-400">
-            アベンチュリン
+            {status.playerName}
           </div>
           <p className="text-base md:text-xl leading-relaxed whitespace-pre-wrap text-gray-100 font-medium">
-            {currentScene.text}
+            {displayText}
           </p>
         </div>
       </div>
