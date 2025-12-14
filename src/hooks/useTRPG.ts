@@ -1,3 +1,5 @@
+'use client';  // ← ★この1行を必ず一番上に追加してください！
+
 import { useState } from 'react';
 import { GameStatus, Scene, Choice, RollResult } from '../types/game';
 import { scenarioData } from '../data/scenario';

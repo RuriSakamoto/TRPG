@@ -1,3 +1,6 @@
+'use client';  // ← ★この1行を必ず一番上に追加してください！
+
+
 import React from 'react';
 import { useTRPG } from '../hooks/useTRPG';
 
