@@ -1,33 +1,66 @@
-// src/components/GameScreen.tsx
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useTRPG } from '../hooks/useTRPG';
-import { CharacterCreation } from './CharacterCreation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export const GameScreen = () => {
-  // setInitialStatus を受け取るように変更
-  const { status, currentScene, logs, handleChoice, setInitialStatus } = useTRPG();
+  const router = useRouter();
+  const { user } = useAuth();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const { status, currentScene, logs, handleChoice, setInitialStatus } = useTRPG({ isLoggedIn: !!user });
   const logsEndRef = useRef<HTMLDivElement>(null);
-  
-  // キャラクター作成中かどうかを管理するstate
-  const [isCreating, setIsCreating] = useState(true);
+
+  useEffect(() => {
+    // LocalStorageからゲームデータを読み込む
+    const gameDataStr = localStorage.getItem('gameData');
+    const characterStr = localStorage.getItem('character');
+
+    if (!gameDataStr || !characterStr) {
+      // データがない場合はキャラクター作成画面に戻る
+      router.push('/');
+      return;
+    }
+
+    try {
+      const gameData = JSON.parse(gameDataStr);
+      const character = JSON.parse(characterStr);
+
+      // 初期ステータスを設定
+      setInitialStatus({
+        hp: character.HP || 10,
+        san: gameData.san || character.SAN || 60,
+        affection: 0,
+        otakuLevel: gameData.otakuLevel || 0,
+        items: [],
+        skills: gameData.skills || [],
+        skillValues: {},
+        turn: 0,
+        clearedEndings: [],
+        loopCount: 1,
+      });
+
+      setIsInitialized(true);
+    } catch (error) {
+      console.error('Failed to load game data:', error);
+      router.push('/');
+    }
+  }, [router, setInitialStatus]);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
-  // 作成中の場合は作成画面を表示
-  if (isCreating) {
-    return <CharacterCreation onComplete={(initial) => {
-      setInitialStatus(initial);
-      setIsCreating(false);
-    }} />;
+  if (!isInitialized || !currentScene) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">読み込み中...</div>
+      </div>
+    );
   }
 
-  if (!currentScene) return <div className="text-white p-10">Loading...</div>;
-
-  // ★追加: ターン数から時刻を計算する関数 (開始21:00, 1ターン30分)
+  // ターン数から時刻を計算する関数 (開始21:00, 1ターン30分)
   const getCurrentTime = () => {
     const startHour = 21; // ゲーム開始時刻
     const minutesPerTurn = 30; // 1ターンあたりの経過時間
@@ -39,7 +72,7 @@ export const GameScreen = () => {
     return `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
   };
 
-  // ★追加: テキスト内の {{TIME}} を現在の時刻に置き換える
+  // テキスト内の {{TIME}} を現在の時刻に置き換える
   const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
 
   return (

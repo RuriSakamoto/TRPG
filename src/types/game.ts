@@ -25,7 +25,7 @@ export type GameStatus = {
   skillValues: Record<string, number>;
   
   items: string[];
-  skills: string[]; // 習得している技能名のリスト（後方互換性のため残す）
+  skills: string[]; // 習得している技能名のリスト
   turn: number;
   clearedEndings: string[];
   loopCount: number;
@@ -54,34 +54,17 @@ export const SKILL_FORMULAS: Record<string, { stat: keyof GameStatus; multiplier
   '情熱': { stat: 'POW', multiplier: 10 }, // オリジナル技能
 };
 
-export type RollResult = 'critical' | 'success' | 'failure' | 'fumble';
-
-export type Choice = {
-  text: string;
-  nextSceneId: string;
-  condition?: (status: GameStatus) => boolean;
-  action?: (status: GameStatus) => Partial<GameStatus>;
-  skillCheck?: {
-    skillName: string;
-    targetValue?: number; // オプション: 指定がない場合はskillValuesから取得
-    successSceneId: string;
-    failureSceneId: string;
-    criticalSceneId?: string; // オプション: クリティカル時の特別シーン
-    fumbleSceneId?: string;   // オプション: ファンブル時の特別シーン
-  };
-};
-
-export type Scene = {
-  id: string;
-  text: string;
-  backgroundImage?: string;
-  characterImage?: string;
-  choices: Choice[];
-};
-
 // 能力値から技能値を初期化する関数
-export const initializeSkillValues = (status: Partial<GameStatus>): Record<string, number> => {
+export const initializeSkillValues = (status?: Partial<GameStatus>): Record<string, number> => {
   const skillValues: Record<string, number> = {};
+  
+  if (!status) {
+    // statusが未定義の場合はデフォルト値
+    AVAILABLE_SKILLS.forEach(skill => {
+      skillValues[skill] = 50;
+    });
+    return skillValues;
+  }
   
   Object.entries(SKILL_FORMULAS).forEach(([skillName, formula]) => {
     const statValue = status[formula.stat] as number | undefined;
@@ -101,52 +84,90 @@ export const initializeSkillValues = (status: Partial<GameStatus>): Record<strin
   return skillValues;
 };
 
-// ★★★ 以下、エンディング情報の型定義を追加 ★★★
-
 // エンディング情報の型定義
 export type EndingInfo = {
   id: string;
-  name: string;
+  title: string;
   description: string;
   icon: string;
-  color: string;
 };
 
-// 全エンディングの定義
-export const ENDINGS: Record<string, EndingInfo> = {
-  true_end: {
+// 全エンディングの定義（配列形式）
+export const ENDINGS: EndingInfo[] = [
+  {
     id: 'true_end',
-    name: 'True End',
+    title: 'True End',
     description: '究極の解釈一致',
     icon: '👑',
-    color: 'from-yellow-400 to-orange-500'
   },
-  ceo_end: {
+  {
     id: 'ceo_end',
-    name: 'CEO End',
+    title: 'CEO End',
     description: '資本主義の勝利',
     icon: '💰',
-    color: 'from-green-400 to-emerald-600'
   },
-  secret_end: {
+  {
     id: 'secret_end',
-    name: 'Secret End',
+    title: 'Secret End',
     description: '秘密の補習',
     icon: '💕',
-    color: 'from-pink-400 to-rose-600'
   },
-  normal_end: {
+  {
     id: 'normal_end',
-    name: 'Normal End',
+    title: 'Normal End',
     description: '妥協と供給',
     icon: '⭐',
-    color: 'from-blue-400 to-indigo-500'
   },
-  bad_end: {
+  {
     id: 'bad_end',
-    name: 'Bad End',
+    title: 'Bad End',
     description: '虚無',
     icon: '💔',
-    color: 'from-gray-400 to-gray-600'
-  }
-};
+  },
+];
+
+// シーン型
+export interface Scene {
+  id: string;
+  title: string;
+  description: string;
+  text: string;
+  backgroundImage?: string;
+  characterImage?: string;
+  choices: Choice[];
+  isEnding?: boolean;
+  endingId?: string;
+}
+
+// 選択肢型
+export interface Choice {
+  text: string;
+  nextScene?: string;
+  condition?: (status: GameStatus) => boolean;
+  effects?: {
+    hp?: number;
+    san?: number;
+    affection?: number;
+    otakuLevel?: number;
+    addItem?: string;
+    removeItem?: string;
+    addSkill?: string;
+  };
+  result?: string;
+  skillCheck?: {
+    skillName: string;
+    targetValue: number;
+    onSuccess?: string;
+    onFailure?: string;
+  };
+}
+
+// ロール結果型
+export interface RollResult {
+  skillName: string;
+  roll: number;
+  skillValue: number;
+  success: boolean;
+  critical: boolean;
+  fumble: boolean;
+}

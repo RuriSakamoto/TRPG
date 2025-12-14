@@ -1,38 +1,34 @@
-# 依存関係（ライブラリの実体など。重いので除外）
+# dependencies
 /node_modules
 /.pnp
 .pnp.js
 
-# テストカバレッジ結果
+# testing
 /coverage
 
-# Next.js のビルド成果物（自動生成されるので除外）
+# next.js
 /.next/
 /out/
 
-# 本番ビルド用ファイル
+# production
 /build
 
-# その他の一時ファイル
+# misc
 .DS_Store
 *.pem
 
-# デバッグログ
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# 環境変数ファイル（★重要：パスワードなどが書かれるため絶対にアップロードしない）
+# local env files
+.env*.local
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-# Vercelの設定ファイル
+# vercel
 .vercel
 
-# TypeScriptのビルド情報
+# typescript
 *.tsbuildinfo
 next-env.d.ts
