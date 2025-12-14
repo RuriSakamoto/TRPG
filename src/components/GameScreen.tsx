@@ -17,6 +17,40 @@ export const GameScreen = () => {
     ? { backgroundImage: `url(${currentScene.backgroundImage})` }
     : { backgroundColor: '#1a1a2e' };
 
+  // ... (前略)
+
+  // ★追加: ターン数から時刻を計算する関数 (1ターン30分経過)
+  const getCurrentTime = () => {
+    const startHour = 21;
+    const minutesPerTurn = 30;
+    const totalMinutes = status.turn * minutesPerTurn;
+    
+    const currentHour = startHour + Math.floor(totalMinutes / 60);
+    const currentMinute = totalMinutes % 60;
+    
+    return `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
+  };
+
+  // ★追加: テキスト内の {{TIME}} を現在の時刻に置き換える
+  const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
+
+  return (
+    <div ... >
+      {/* ... (中略) ... */}
+
+      {/* メッセージウィンドウ部分の修正 */}
+      <div className="...">
+        {/* ... */}
+        <p className="text-base md:text-xl leading-relaxed whitespace-pre-wrap text-gray-100 font-medium">
+          {/* currentScene.text ではなく displayText を使う */}
+          {displayText}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+
   return (
     <div 
       className="relative w-full h-screen bg-cover bg-center overflow-hidden font-sans text-white select-none"

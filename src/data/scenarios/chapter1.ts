@@ -1,54 +1,6 @@
 import { Scene } from '../../types/game';
 
 export const chapter1: Scene[] = [
-  // ... (冒頭部分はそのまま) ...
-
-  // --- ランダムイベント判定 (修正箇所) ---
-  {
-    id: 'chap1_event_check',
-    text: '（時計の針が進む…）\n何も起きなければいいが……。',
-    choices: [
-      { 
-        text: '運試し (LUCK)', 
-        nextSceneId: 'chap1_check_luck',
-        skillCheck: {
-          skillName: '幸運',
-          targetValue: 50, // 50%の確率で何も起きない
-          successSceneId: 'chap1_action_select', // 成功なら行動選択に戻る（イベントなし）
-          failureSceneId: 'chap1_random_event'   // 失敗ならトパーズから電話
-        }
-      }
-    ]
-  },
-  {
-    id: 'chap1_random_event',
-    text: '突然、端末が着信音を鳴らした！\n画面には「トパーズ」の文字。\n\n「げっ、こんな時に…」\n出ないと怪しまれるが、出れば長話になるかもしれない。',
-    choices: [
-      { 
-        text: '無視して推し活を続ける', 
-        nextSceneId: 'chap1_action_select',
-        action: (s) => ({ ...s, san: s.san - 5 }) // 罪悪感
-      },
-      { 
-        text: '手短に対応する', 
-        nextSceneId: 'chap1_topaz_talk',
-        action: (s) => ({ ...s, turn: s.turn + 1 }) // 時間ロス
-      }
-    ]
-  },
-  {
-    id: 'chap1_topaz_talk',
-    text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ごめんトパーズ、今すごく大事な商談中（推し活）なんだ」\n「え？ 後ろで変なBGM流れてない？ お経…？」\n\n危ない。祭壇のBGMが漏れていた。\nなんとか誤魔化して電話を切った。時間をロスしてしまった。',
-    choices: [{ text: '行動に戻る', nextSceneId: 'chap1_action_select' }]
-  },
-
-  // ... (以下、クライマックスなどはそのまま) ...
-  {
-    id: 'chap1_cleanup_early',
-    text: '「今日はこれくらいにしておこう」\n満足して片付けを始めた、その時。\n\nガチャリ。\n\n「……アベンチュリン？」\nレイシオが帰ってきた。予定より早い！\nだが、君は既に片付けを終えている。完璧だ。',
-    choices: [{ text: '余裕の笑みで迎える', nextSceneId: 'chap2_intro_safe' }]
-  },
-  // 行動パートの定義（省略せずに記載が必要な場合は言ってください）
   {
     id: 'chap1_intro',
     text: '【第1章：アベンチュリンの”推し活”】\n\n「推し活とは、時間との勝負だ」\n\n限られた時間の中で、いかに効率よく成分（レイシオ）を摂取し、明日への活力を得るか。\n今日のミッションは以下の通りだ。\n\n1. 祭壇の設営と礼拝\n2. ネット上の供給確認\n3. 証拠隠滅して何食わぬ顔で出迎える',
@@ -58,7 +10,8 @@ export const chapter1: Scene[] = [
   },
   {
     id: 'chap1_action_select',
-    text: '現在時刻：21:00。\nレイシオの帰宅まで、あと数ターン行動できそうだ。\n何をしようか？',
+    // {{TIME}} は GameScreen.tsx で自動的に 21:00, 21:30... に置換されます
+    text: '現在時刻：{{TIME}}。\nレイシオの帰宅（23:00）まで、あと数ターン行動できそうだ。\n何をしようか？',
     choices: [
       { 
         text: '祭壇を愛でる (SAN値回復)', 
@@ -88,7 +41,7 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '次の行動へ', 
-        nextSceneId: 'chap1_event_check',
+        nextSceneId: 'chap1_check_event',
         action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
       }
     ]
@@ -99,7 +52,7 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '次の行動へ', 
-        nextSceneId: 'chap1_event_check',
+        nextSceneId: 'chap1_check_event',
         action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, turn: s.turn + 1 }) 
       }
     ]
@@ -110,9 +63,64 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '次の行動へ', 
-        nextSceneId: 'chap1_event_check',
+        nextSceneId: 'chap1_check_event',
         action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: s.turn + 1 }) 
       }
     ]
+  },
+
+  // --- イベント発生判定 (運要素なし・ターン固定) ---
+  {
+    id: 'chap1_check_event',
+    text: '（時計の針が進む…）',
+    choices: [
+      { 
+        text: '……おや？', 
+        nextSceneId: 'chap1_topaz_call',
+        // ターン2 (22:00) の時だけ強制的に電話イベントへ
+        condition: (s) => s.turn === 2
+      },
+      {
+        text: 'まだ時間はある',
+        nextSceneId: 'chap1_action_select',
+        // それ以外は行動選択へ戻る
+        condition: (s) => s.turn !== 2 && s.turn < 4
+      },
+      {
+        text: 'そろそろ時間だ',
+        nextSceneId: 'chap1_cleanup_early',
+        condition: (s) => s.turn >= 4
+      }
+    ]
+  },
+
+  // --- トパーズからの電話 (固定イベント) ---
+  {
+    id: 'chap1_topaz_call',
+    text: '端末が震えた。画面には「トパーズ」の文字。\n\n「……やれやれ。この時間に連絡してくるなんて、相変わらずワーカーホリックだね」\n\n無視することもできるが、後でカブに噛まれるのも面倒だ。\nどうする？',
+    choices: [
+      { 
+        text: '手短に対応する (1ターン消費)', 
+        nextSceneId: 'chap1_topaz_talk',
+        action: (s) => ({ ...s, turn: s.turn + 1 }) 
+      },
+      { 
+        text: '居留守を使う (SAN値減少)', 
+        nextSceneId: 'chap1_action_select',
+        action: (s) => ({ ...s, san: s.san - 5 }) 
+      }
+    ]
+  },
+  {
+    id: 'chap1_topaz_talk',
+    text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ハイハイ、明日一番で処理しておくよ。今は大事な商談中（推し活）でね」\n\n適当にあしらって電話を切った。\n少し時間を食ってしまったが、平和は守られた。',
+    choices: [{ text: '行動に戻る', nextSceneId: 'chap1_action_select' }]
+  },
+
+  // --- クライマックス：帰宅 ---
+  {
+    id: 'chap1_cleanup_early',
+    text: '「今日はこれくらいにしておこう」\n満足して片付けを始めた、その時。\n\nガチャリ。\n\n「……アベンチュリン？」\nレイシオが帰ってきた。予定より早い！\nだが、君は既に片付けを終えている。完璧だ。',
+    choices: [{ text: '余裕の笑みで迎える', nextSceneId: 'chap2_intro_safe' }]
   }
 ];
