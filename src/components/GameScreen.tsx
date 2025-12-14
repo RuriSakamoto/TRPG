@@ -27,6 +27,21 @@ export const GameScreen = () => {
 
   if (!currentScene) return <div className="text-white p-10">Loading...</div>;
 
+  // ★追加: ターン数から時刻を計算する関数 (開始21:00, 1ターン30分)
+  const getCurrentTime = () => {
+    const startHour = 21; // ゲーム開始時刻
+    const minutesPerTurn = 30; // 1ターンあたりの経過時間
+    const totalMinutes = status.turn * minutesPerTurn;
+    
+    const currentHour = startHour + Math.floor(totalMinutes / 60);
+    const currentMinute = totalMinutes % 60;
+    
+    return `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
+  };
+
+  // ★追加: テキスト内の {{TIME}} を現在の時刻に置き換える
+  const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
+
   return (
     <div className="min-h-screen bg-gray-900 text-white font-sans selection:bg-indigo-500 selection:text-white overflow-hidden">
       {/* メインゲーム画面 */}
@@ -63,7 +78,7 @@ export const GameScreen = () => {
           <div className="absolute bottom-0 w-full p-6 z-20 bg-gradient-to-t from-gray-900 via-gray-900/90 to-transparent pt-20">
             <div className="max-w-4xl mx-auto bg-black/60 backdrop-blur-sm border border-gray-700 p-6 rounded-xl shadow-2xl">
               <p className="text-lg md:text-xl leading-relaxed text-gray-100 whitespace-pre-wrap">
-                {currentScene.text}
+                {displayText}
               </p>
             </div>
           </div>
@@ -95,7 +110,7 @@ export const GameScreen = () => {
                 </div>
               </div>
             </div>
-            {/* 技能表示エリアを追加 */}
+            {/* 技能表示エリア */}
             {status.skills.length > 0 && (
               <div className="mt-4 bg-gray-700/50 p-3 rounded-lg border border-gray-600">
                 <div className="text-xs text-gray-400 mb-1">習得技能</div>
@@ -125,7 +140,6 @@ export const GameScreen = () => {
           <div className="p-6 bg-gray-800">
             <div className="space-y-3">
               {currentScene.choices.map((choice, index) => {
-                // 条件判定 (conditionがある場合、falseなら表示しない)
                 if (choice.condition && !choice.condition(status)) {
                   return null;
                 }
