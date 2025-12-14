@@ -93,6 +93,9 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     // 選択肢のテキストをログに追加
     addToLogs(`> ${choice.text}`);
 
+    // 現在のステータスを保持
+    let currentStatus = { ...status };
+
     // スキルチェックがある場合
     if (choice.skillCheck) {
       const result = rollDice(
@@ -102,8 +105,10 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
 
       // action関数がある場合は先に実行してステータスを更新
       if (choice.action) {
-        const actionUpdates = choice.action(status);
-        updateStatus(actionUpdates);
+        const newStatus = choice.action(currentStatus);
+        // action関数が返した新しいステータスで更新
+        updateStatus(newStatus);
+        currentStatus = newStatus;
       }
 
       // 成功/失敗に応じた処理
@@ -128,34 +133,35 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
 
       // action関数がある場合は実行
       if (choice.action) {
-        const actionUpdates = choice.action(status);
-        updates = { ...updates, ...actionUpdates };
+        const newStatus = choice.action(currentStatus);
+        // action関数が返した完全な新しいステータスを使用
+        updates = newStatus;
       }
 
-      // effectsがある場合は適用
+      // effectsがある場合は適用（action関数の結果に追加）
       if (choice.effects) {
         if (choice.effects.hp !== undefined) {
-          updates.hp = Math.max(0, (status.hp || 0) + choice.effects.hp);
+          updates.hp = Math.max(0, (currentStatus.hp || 0) + choice.effects.hp);
         }
         if (choice.effects.san !== undefined) {
-          updates.san = Math.max(0, Math.min(99, (status.san || 0) + choice.effects.san));
+          updates.san = Math.max(0, Math.min(99, (currentStatus.san || 0) + choice.effects.san));
         }
         if (choice.effects.affection !== undefined) {
-          updates.affection = (status.affection || 0) + choice.effects.affection;
+          updates.affection = (currentStatus.affection || 0) + choice.effects.affection;
         }
         if (choice.effects.otakuLevel !== undefined) {
-          updates.otakuLevel = (status.otakuLevel || 0) + choice.effects.otakuLevel;
+          updates.otakuLevel = (currentStatus.otakuLevel || 0) + choice.effects.otakuLevel;
         }
         if (choice.effects.addItem) {
-          updates.items = [...(status.items || []), choice.effects.addItem];
+          updates.items = [...(currentStatus.items || []), choice.effects.addItem];
         }
         if (choice.effects.removeItem) {
-          updates.items = (status.items || []).filter(item => item !== choice.effects?.removeItem);
+          updates.items = (currentStatus.items || []).filter(item => item !== choice.effects?.removeItem);
         }
         if (choice.effects.addSkill) {
-          updates.skills = [...(status.skills || []), choice.effects.addSkill];
+          updates.skills = [...(currentStatus.skills || []), choice.effects.addSkill];
           updates.skillValues = {
-            ...(status.skillValues || {}),
+            ...(currentStatus.skillValues || {}),
             [choice.effects.addSkill]: initializeSkillValues()[choice.effects.addSkill] || 0
           };
         }
@@ -164,6 +170,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       // ステータスを更新
       if (Object.keys(updates).length > 0) {
         updateStatus(updates);
+        currentStatus = { ...currentStatus, ...updates };
       }
 
       // 結果テキストをログに追加
@@ -181,7 +188,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
 
           // エンディングチェック
           if (nextScene.isEnding && nextScene.endingId) {
-            const newClearedEndings = [...status.clearedEndings];
+            const newClearedEndings = [...currentStatus.clearedEndings];
             if (!newClearedEndings.includes(nextScene.endingId)) {
               newClearedEndings.push(nextScene.endingId);
               updateStatus({ clearedEndings: newClearedEndings });
