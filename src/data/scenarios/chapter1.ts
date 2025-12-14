@@ -7,7 +7,7 @@ export const chapter1: Scene[] = [
     description: '限られた時間での推し活ミッション',
     text: '【第1章：アベンチュリンの"推し活"】\n\n「推し活とは、時間との勝負だ」\n\n限られた時間の中で、いかに効率よく成分（レイシオ）を摂取し、明日への活力を得るか。\n今日のミッションは以下の通りだ。\n\n1. 祭壇の設営と礼拝\n2. ネット上の供給確認\n3. 証拠隠滅して何食わぬ顔で出迎える',
     choices: [
-      { text: 'ミッション開始', nextScene: 'chap1_action_select', action: (s) => ({ ...s, turn: 0 }) }
+      { text: 'ミッション開始', nextScene: 'chap1_action_select', action: (s) => ({ ...s, turn: 1 }) }
     ]
   },
   {
@@ -19,22 +19,22 @@ export const chapter1: Scene[] = [
       { 
         text: '祭壇を愛でる (SAN値回復)', 
         nextScene: 'chap1_altar',
-        condition: (s) => s.turn < 4
+        condition: (s) => (s.turn || 0) < 5
       },
       { 
         text: 'グッズのメンテナンス (オタク度UP)', 
         nextScene: 'chap1_goods',
-        condition: (s) => s.turn < 4
+        condition: (s) => (s.turn || 0) < 5
       },
       { 
         text: 'カンパニーの端末でエゴサ (情報収集)', 
         nextScene: 'chap1_sns',
-        condition: (s) => s.turn < 4
+        condition: (s) => (s.turn || 0) < 5
       },
       { 
         text: 'もう十分だ、片付けよう', 
         nextScene: 'chap1_cleanup_early',
-        condition: (s) => s.turn >= 1
+        condition: (s) => (s.turn || 0) >= 2
       }
     ]
   },
@@ -42,7 +42,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_altar',
     title: '祭壇を愛でる',
     description: 'レイシオの写真を拝む',
-    text: '祭壇の中央には、額装されたレイシオの写真（隠し撮り・寝顔）。\nLEDキャンドルの揺らめきが、彼の整った顔立ちを神々しく照らし出している。\n\n「ああ…教授…今日も眉間のシワが美しいよ…」\n「その不機嫌そうな口元、最高だね…」\n\n拝むことで心が洗われる。明日も頑張って生きよう。',
+    text: '現在時刻：{{TIME}}。\n\n祭壇の中央には、額装されたレイシオの写真（隠し撮り・寝顔）。\nLEDキャンドルの揺らめきが、彼の整った顔立ちを神々しく照らし出している。\n\n「ああ…教授…今日も眉間のシワが美しいよ…」\n「その不機嫌そうな口元、最高だね…」\n\n拝むことで心が洗われる。明日も頑張って生きよう。',
     choices: [
       { 
         text: '【目星判定】新しい魅力を発見する', 
@@ -56,7 +56,7 @@ export const chapter1: Scene[] = [
       { 
         text: 'そのまま次の行動へ', 
         nextScene: 'chap1_altar_after',
-        action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, san: Math.min(s.san + 15, 90) }) 
       }
     ]
   },
@@ -69,7 +69,7 @@ export const chapter1: Scene[] = [
       { 
         text: '至福の時間だった', 
         nextScene: 'chap1_check_event',
-        action: (s) => ({ ...s, san: Math.min(s.san + 25, 90), otakuLevel: s.otakuLevel + 2, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, san: Math.min(s.san + 25, 90), otakuLevel: s.otakuLevel + 2, turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
@@ -82,7 +82,7 @@ export const chapter1: Scene[] = [
       { 
         text: '次の行動へ', 
         nextScene: 'chap1_check_event',
-        action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
@@ -90,12 +90,12 @@ export const chapter1: Scene[] = [
     id: 'chap1_goods',
     title: 'グッズのメンテナンス',
     description: '自作の抱き枕カバーを愛でる',
-    text: 'アタッシュケースから「等身大抱き枕カバー（自作）」を取り出す。\n生地の質感、プリントの鮮明さ…完璧だ。\n\n「本人は抱かせてくれないけど、これなら文句言わないもんね」\n頬ずりをする。\n虚しい？ いや、これは高尚な儀式だ。',
+    text: '現在時刻：{{TIME}}。\n\nアタッシュケースから「等身大抱き枕カバー（自作）」を取り出す。\n生地の質感、プリントの鮮明さ…完璧だ。\n\n「本人は抱かせてくれないけど、これなら文句言わないもんね」\n頬ずりをする。\n虚しい？ いや、これは高尚な儀式だ。',
     choices: [
       { 
         text: '次の行動へ', 
         nextScene: 'chap1_check_event',
-        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
@@ -103,7 +103,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_sns',
     title: 'エゴサーチ',
     description: 'SNSでレイシオ関連の情報を収集',
-    text: 'SNSを開く。\n『【悲報】レイシオ教授、また学会で論破祭り』というスレが立っている。\n\n「ふふ、相変わらずだね」\n動画を見ると、相手を完膚なきまでに叩きのめすレイシオの姿が。',
+    text: '現在時刻：{{TIME}}。\n\nSNSを開く。\n『【悲報】レイシオ教授、また学会で論破祭り』というスレが立っている。\n\n「ふふ、相変わらずだね」\n動画を見ると、相手を完膚なきまでに叩きのめすレイシオの姿が。',
     choices: [
       { 
         text: '【コンピューター判定】効率的にエゴサする', 
@@ -117,7 +117,7 @@ export const chapter1: Scene[] = [
       { 
         text: 'そのまま眺める', 
         nextScene: 'chap1_sns_after',
-        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1 }) 
       }
     ]
   },
@@ -130,7 +130,7 @@ export const chapter1: Scene[] = [
       { 
         text: '大満足だ', 
         nextScene: 'chap1_check_event',
-        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, affection: s.affection + 2, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, affection: s.affection + 2, turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
@@ -143,7 +143,7 @@ export const chapter1: Scene[] = [
       { 
         text: '次の行動へ', 
         nextScene: 'chap1_check_event',
-        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
@@ -153,27 +153,27 @@ export const chapter1: Scene[] = [
     id: 'chap1_check_event',
     title: '時間経過',
     description: 'イベント発生の確認',
-    text: '（時計の針が進む…）',
+    text: '現在時刻：{{TIME}}。\n\n（時計の針が進む…）',
     choices: [
       { 
         text: '……おや？', 
         nextScene: 'chap1_listen_check',
-        condition: (s) => s.turn === 2
+        condition: (s) => (s.turn || 0) === 3
       },
       {
         text: 'まだ時間はある',
         nextScene: 'chap1_action_select',
-        condition: (s) => s.turn < 2
+        condition: (s) => (s.turn || 0) < 3
       },
       {
         text: 'そろそろ時間だ',
         nextScene: 'chap1_cleanup_early',
-        condition: (s) => s.turn >= 4
+        condition: (s) => (s.turn || 0) >= 5
       },
       {
         text: '行動を続ける',
         nextScene: 'chap1_action_select',
-        condition: (s) => s.turn > 2 && s.turn < 4
+        condition: (s) => (s.turn || 0) > 3 && (s.turn || 0) < 5
       }
     ]
   },
@@ -183,7 +183,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_listen_check',
     title: '物音',
     description: '遠くで物音が聞こえた',
-    text: '祭壇を愛でていると、遠くで物音が聞こえた気がした…？\n\n「……気のせいかな？」',
+    text: '現在時刻：{{TIME}}。\n\n祭壇を愛でていると、遠くで物音が聞こえた気がした…？\n\n「……気のせいかな？」',
     choices: [
       { 
         text: '【聞き耳判定】耳を澄ます', 
@@ -225,7 +225,8 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '胸を撫で下ろす', 
-        nextScene: 'chap1_topaz_call'
+        nextScene: 'chap1_topaz_call',
+        action: (s) => ({ ...s, san: Math.min(s.san + 5, 90) })
       }
     ]
   },
@@ -235,7 +236,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_topaz_call',
     title: 'トパーズからの電話',
     description: '仕事の連絡が入った',
-    text: '端末が震えた。画面には「トパーズ」の文字。\n\n「……やれやれ。この時間に連絡してくるなんて、相変わらずワーカーホリックだね」\n\n無視することもできるが、後でカブに噛まれるのも面倒だ。\nどうする？',
+    text: '現在時刻：{{TIME}}。\n\n端末が震えた。画面には「トパーズ」の文字。\n\n「……やれやれ。この時間に連絡してくるなんて、相変わらずワーカーホリックだね」\n\n無視することもできるが、後でカブに噛まれるのも面倒だ。\nどうする？',
     choices: [
       { 
         text: '手短に対応する', 
@@ -244,7 +245,7 @@ export const chapter1: Scene[] = [
       { 
         text: '居留守を使う (SAN値減少)', 
         nextScene: 'chap1_after_topaz',
-        action: (s) => ({ ...s, san: s.san - 5 }) 
+        action: (s) => ({ ...s, san: s.san - 5, turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
@@ -254,20 +255,23 @@ export const chapter1: Scene[] = [
     description: 'トパーズの用件を処理',
     text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ハイハイ、明日一番で処理しておくよ。今は大事な商談中（推し活）でね」\n\n適当にあしらって電話を切った。\n少し時間を食ってしまったが、平和は守られた。',
     choices: [
-      { text: '次へ', nextScene: 'chap1_after_topaz' }
+      { 
+        text: '次へ', 
+        nextScene: 'chap1_after_topaz',
+        action: (s) => ({ ...s, turn: (s.turn || 0) + 1 })
+      }
     ]
   },
   {
     id: 'chap1_after_topaz',
     title: '時間確認',
     description: 'まだ時間はあるか？',
-    text: '時計を確認する。まだ少し時間がありそうだ。',
+    text: '現在時刻：{{TIME}}。\n\n時計を確認する。まだ少し時間がありそうだ。',
     choices: [
       {
         text: 'もう少し推し活を続ける',
         nextScene: 'chap1_action_select',
-        condition: (s) => s.turn < 4,
-        action: (s) => ({ ...s, turn: s.turn + 1 })
+        condition: (s) => (s.turn || 0) < 5
       },
       {
         text: 'そろそろ片付けよう',
@@ -281,7 +285,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_cleanup_early',
     title: 'レイシオの帰宅',
     description: '予定より早く帰ってきた',
-    text: '「今日はこれくらいにしておこう」\n満足して片付けを始めた、その時。\n\nガチャリ。\n\n「……アベンチュリン？」\nレイシオが帰ってきた。予定より早い！\nだが、君は既に片付けを終えている。完璧だ。',
+    text: '現在時刻：{{TIME}}。\n\n「今日はこれくらいにしておこう」\n満足して片付けを始めた、その時。\n\nガチャリ。\n\n「……アベンチュリン？」\nレイシオが帰ってきた。予定より早い！\nだが、君は既に片付けを終えている。完璧だ。',
     choices: [{ text: '余裕の笑みで迎える', nextScene: 'chap2_intro_safe' }]
   }
 ];

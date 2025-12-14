@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTRPG } from '../hooks/useTRPG';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -8,198 +8,195 @@ import { useRouter } from 'next/navigation';
 export const GameScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const [isInitialized, setIsInitialized] = useState(false);
-  const { status, currentScene, logs, handleChoice, setInitialStatus } = useTRPG({ isLoggedIn: !!user });
-  const logsEndRef = useRef<HTMLDivElement>(null);
+  const { status, currentScene, logs, handleChoice, setInitialStatus } = useTRPG({
+    isLoggedIn: !!user,
+  });
+
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // LocalStorageからゲームデータを読み込む
-    const gameDataStr = localStorage.getItem('gameData');
-    const characterStr = localStorage.getItem('character');
+    setIsClient(true);
 
-    if (!gameDataStr || !characterStr) {
-      // データがない場合はキャラクター作成画面に戻る
-      router.push('/');
-      return;
-    }
+    // LocalStorageからキャラクターデータを読み込む
+    const savedCharacter = localStorage.getItem('character');
+    const savedGameData = localStorage.getItem('gameData');
 
-    try {
-      const gameData = JSON.parse(gameDataStr);
-      const character = JSON.parse(characterStr);
+    if (savedCharacter && savedGameData) {
+      try {
+        const character = JSON.parse(savedCharacter);
+        const gameData = JSON.parse(savedGameData);
 
-      // 初期ステータスを設定
-      setInitialStatus({
-        hp: character.HP || 10,
-        san: gameData.san || character.SAN || 60,
-        affection: 0,
-        otakuLevel: gameData.otakuLevel || 0, // 隠しパラメータ
-        items: [],
-        skills: gameData.skills || [],
-        skillValues: {},
-        turn: 0,
-        clearedEndings: [],
-        loopCount: 1,
-      });
-
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Failed to load game data:', error);
+        // 初期ステータスを設定
+        setInitialStatus({
+          ...character,
+          hp: character.HP || 10,
+          san: gameData.san || character.SAN || 60,
+          mp: character.MP,
+          affection: gameData.affection || 0,
+          otakuLevel: gameData.otakuLevel || 0,
+          items: gameData.items || [],
+          skills: gameData.skills || [],
+          skillValues: character.skillValues || {},
+          turn: 0,
+          clearedEndings: [],
+          loopCount: 1,
+        });
+      } catch (error) {
+        console.error('Failed to load game data:', error);
+        router.push('/');
+      }
+    } else {
+      // データがない場合はキャラクター作成画面へ
       router.push('/');
     }
   }, [router, setInitialStatus]);
 
-  useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs]);
+  // 時刻を計算する関数（21時スタート、1ターン = 30分）
+  const getCurrentTime = () => {
+    const startHour = 21;
+    const startMinute = 0;
+    const minutesPerTurn = 30;
 
-  if (!isInitialized || !currentScene) {
+    const totalMinutes = startMinute + (status.turn * minutesPerTurn);
+    const hours = startHour + Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    // 24時を超えたら翌日扱い
+    const displayHours = hours % 24;
+
+    return `${displayHours}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  // テキスト内のプレースホルダーを置換する関数
+  const replaceTextPlaceholders = (text: string) => {
+    return text.replace(/{{TIME}}/g, getCurrentTime());
+  };
+
+  if (!isClient) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-white text-xl">読み込み中...</div>
       </div>
     );
   }
 
-  // ターン数から時刻を計算する関数 (開始21:00, 1ターン30分)
-  const getCurrentTime = () => {
-    const startHour = 21; // ゲーム開始時刻
-    const minutesPerTurn = 30; // 1ターンあたりの経過時間
-    const totalMinutes = status.turn * minutesPerTurn;
-    
-    const currentHour = startHour + Math.floor(totalMinutes / 60);
-    const currentMinute = totalMinutes % 60;
-    
-    return `${currentHour}:${currentMinute.toString().padStart(2, '0')}`;
+  // 選択肢が条件を満たすかチェック
+  const getAvailableChoices = () => {
+    return currentScene.choices.filter(choice => {
+      if (choice.condition) {
+        return choice.condition(status);
+      }
+      return true;
+    });
   };
 
-  // テキスト内の {{TIME}} を現在の時刻に置き換える
-  const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
+  const availableChoices = getAvailableChoices();
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-amber-700 selection:text-white overflow-hidden">
-      {/* メインゲーム画面 */}
-      <div className="relative w-full h-screen flex flex-col md:flex-row">
-        
-        {/* 左側: ビジュアル & シナリオエリア */}
-        <div className="relative flex-1 h-1/2 md:h-full flex flex-col">
-          {/* 背景画像 */}
-          <div className="absolute inset-0 z-0">
-            {currentScene.backgroundImage ? (
-              <img 
-                src={currentScene.backgroundImage} 
-                alt="background" 
-                className="w-full h-full object-cover opacity-60"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-          </div>
-
-          {/* キャラクター立ち絵 */}
-          {currentScene.characterImage && (
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 z-10 w-auto h-[80%] max-h-[600px]">
-              <img 
-                src={currentScene.characterImage} 
-                alt="character" 
-                className="h-full w-auto object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-              />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* ステータス表示 */}
+        <div className="bg-slate-800/60 backdrop-blur-md rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 text-xs sm:text-sm">
+            <div>
+              <span className="text-slate-400">HP:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-red-400">{status.hp}</span>
             </div>
-          )}
-
-          {/* シナリオテキストエリア */}
-          <div className="absolute bottom-0 w-full p-4 sm:p-6 z-20 bg-gradient-to-t from-slate-900 via-slate-900/90 to-transparent pt-16 sm:pt-20">
-            <div className="max-w-4xl mx-auto bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-4 sm:p-6 rounded-xl shadow-2xl">
-              <p className="text-base sm:text-lg md:text-xl leading-relaxed text-slate-100 whitespace-pre-wrap">
-                {displayText}
-              </p>
+            <div>
+              <span className="text-slate-400">SAN:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-blue-400">{status.san}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">好感度:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-pink-400">{status.affection}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">オタク度:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-purple-400">{status.otakuLevel}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">ターン:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-amber-400">{status.turn}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">時刻:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-green-400">{getCurrentTime()}</span>
             </div>
           </div>
         </div>
 
-        {/* 右側: ステータス & 選択肢エリア */}
-        <div className="w-full md:w-[400px] bg-slate-800 border-l border-slate-700 flex flex-col h-1/2 md:h-full z-30 shadow-2xl">
-          
-          {/* ステータスパネル */}
-          <div className="p-4 sm:p-6 bg-slate-800/95 backdrop-blur border-b border-slate-700">
-            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Player Status</h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                <div className="text-xs text-slate-400 mb-1">SAN値</div>
-                <div className="text-xl sm:text-2xl font-bold text-blue-400">{status.san}</div>
-              </div>
-              <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                <div className="text-xs text-slate-400 mb-1">好感度</div>
-                <div className="text-xl sm:text-2xl font-bold text-rose-400">{status.affection}</div>
-              </div>
-              {/* オタク度は非表示（隠しパラメータ） */}
-              <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600 col-span-2">
-                <div className="text-xs text-slate-400 mb-1">所持品</div>
-                <div className="text-sm font-medium text-slate-300">
-                  {status.items.length > 0 ? status.items.join(', ') : 'なし'}
-                </div>
-              </div>
+        {/* メインコンテンツ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* シーン表示 */}
+          <div className="lg:col-span-2 bg-slate-800/60 backdrop-blur-md rounded-lg p-4 sm:p-6 border border-slate-600">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-amber-400">
+              {currentScene.title}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 mb-3 sm:mb-4">
+              {currentScene.description}
+            </p>
+            <div className="text-sm sm:text-base text-slate-200 mb-4 sm:mb-6 whitespace-pre-wrap leading-relaxed">
+              {replaceTextPlaceholders(currentScene.text)}
             </div>
-            {/* 技能表示エリア */}
-            {status.skills.length > 0 && (
-              <div className="mt-3 sm:mt-4 bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                <div className="text-xs text-slate-400 mb-1">習得技能</div>
-                <div className="flex flex-wrap gap-1">
-                  {status.skills.map(skill => (
-                    <span key={skill} className="text-xs bg-amber-900/50 text-amber-200 px-2 py-1 rounded border border-amber-700/30">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* ログエリア */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 bg-slate-900/50 text-xs sm:text-sm font-mono border-b border-slate-700">
-            {logs.map((log, i) => (
-              <div key={i} className="text-slate-400 border-l-2 border-slate-600 pl-2 py-1">
-                <span className="text-slate-600 mr-2">[{i + 1}]</span>
-                {log}
-              </div>
-            ))}
-            <div ref={logsEndRef} />
-          </div>
-
-          {/* 選択肢エリア */}
-          <div className="p-4 sm:p-6 bg-slate-800">
+            {/* 選択肢 */}
             <div className="space-y-2 sm:space-y-3">
-              {currentScene.choices.map((choice, index) => {
-                if (choice.condition && !choice.condition(status)) {
-                  return null;
-                }
-                
-                return (
+              {availableChoices.length > 0 ? (
+                availableChoices.map((choice, index) => (
                   <button
                     key={index}
                     onClick={() => handleChoice(choice)}
-                    className="w-full p-3 sm:p-4 text-left bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white rounded-lg transition-all transform hover:translate-x-1 shadow-lg border border-slate-500/30 group"
+                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors border border-slate-600 text-sm sm:text-base"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm sm:text-base">{choice.text}</span>
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-amber-300">
-                        →
-                      </span>
-                    </div>
-                    {choice.skillCheck && (
-                      <div className="text-xs text-slate-300 mt-1 flex items-center gap-1">
-                        <span className="bg-slate-800/50 px-1.5 py-0.5 rounded">
-                          🎲 {choice.skillCheck.skillName}
-                        </span>
-                        <span>目標: {choice.skillCheck.targetValue}%</span>
-                      </div>
-                    )}
+                    {choice.text}
                   </button>
-                );
-              })}
+                ))
+              ) : (
+                <div className="text-center text-slate-400 py-4">
+                  選択肢がありません
+                </div>
+              )}
             </div>
           </div>
 
+          {/* ログ表示 */}
+          <div className="bg-slate-800/60 backdrop-blur-md rounded-lg p-4 sm:p-6 border border-slate-600 max-h-[400px] sm:max-h-[600px] overflow-y-auto">
+            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-slate-100 sticky top-0 bg-slate-800/90 pb-2">
+              ログ
+            </h3>
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+              {logs.map((log, index) => (
+                <div
+                  key={index}
+                  className={`${
+                    log.startsWith('🎲')
+                      ? 'text-amber-400'
+                      : log.startsWith('>')
+                      ? 'text-blue-400 font-semibold'
+                      : log.startsWith('---')
+                      ? 'text-green-400 font-bold'
+                      : 'text-slate-300'
+                  }`}
+                >
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* メニューボタン */}
+        <div className="mt-4 sm:mt-6 flex justify-center">
+          <button
+            onClick={() => {
+              if (confirm('キャラクター作成画面に戻りますか？（進行状況は失われます）')) {
+                router.push('/');
+              }
+            }}
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-sm sm:text-base"
+          >
+            タイトルに戻る
+          </button>
         </div>
       </div>
     </div>
