@@ -144,7 +144,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
           updates.items = [...(status.items || []), choice.effects.addItem];
         }
         if (choice.effects.removeItem) {
-          updates.items = (status.items || []).filter(item => item !== choice.effects.removeItem);
+          updates.items = (status.items || []).filter(item => item !== choice.effects?.removeItem);
         }
         if (choice.effects.addSkill) {
           updates.skills = [...(status.skills || []), choice.effects.addSkill];
