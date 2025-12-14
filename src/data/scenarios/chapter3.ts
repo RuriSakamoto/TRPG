@@ -60,7 +60,8 @@ export const chapter3: Scene[] = [
       {
         text: 'レイシオを信じて目配せする',
         nextSceneId: 'chap3_ratio_counter',
-        condition: (s) => s.affection >= 3 // 第2章で勝利していないと出ない
+        // ★修正箇所: 条件を 3 -> 6 に引き上げ (第2章クリアで+3確定なので、第1章での積み上げが必要)
+        condition: (s) => s.affection >= 6
       },
       // Normal Endルート (条件を満たさない場合のデフォルト)
       { 
