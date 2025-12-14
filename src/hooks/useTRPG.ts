@@ -23,10 +23,10 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     loopCount: 1,
   });
 
-  const [currentScene, setCurrentScene] = useState<Scene>(scenarioData.scenes[0]);
+  const [currentScene, setCurrentScene] = useState<Scene>(scenarioData[0]);
   const [logs, setLogs] = useState<string[]>([
-    `--- ${scenarioData.scenes[0].title} ---`,
-    scenarioData.scenes[0].description
+    `--- ${scenarioData[0].title} ---`,
+    scenarioData[0].description
   ]);
   const [rollResults, setRollResults] = useState<RollResult[]>([]);
 
@@ -34,8 +34,8 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
   const setInitialStatus = (initialStatus: GameStatus) => {
     setStatus(initialStatus);
     setLogs([
-      `--- ${scenarioData.scenes[0].title} ---`,
-      scenarioData.scenes[0].description
+      `--- ${scenarioData[0].title} ---`,
+      scenarioData[0].description
     ]);
   };
 
@@ -102,14 +102,14 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
 
       // 成功/失敗に応じた処理
       if (result.success && choice.skillCheck.onSuccess) {
-        const nextScene = scenarioData.scenes.find(s => s.id === choice.skillCheck!.onSuccess);
+        const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onSuccess);
         if (nextScene) {
           setCurrentScene(nextScene);
           addToLogs(`\n--- ${nextScene.title} ---`);
           addToLogs(nextScene.description);
         }
       } else if (!result.success && choice.skillCheck.onFailure) {
-        const nextScene = scenarioData.scenes.find(s => s.id === choice.skillCheck!.onFailure);
+        const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onFailure);
         if (nextScene) {
           setCurrentScene(nextScene);
           addToLogs(`\n--- ${nextScene.title} ---`);
@@ -118,10 +118,16 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       }
     } else {
       // 通常の選択肢処理
-      // ステータス更新
+      let updates: Partial<GameStatus> = { ...status };
+
+      // action関数がある場合は実行
+      if (choice.action) {
+        const actionUpdates = choice.action(status);
+        updates = { ...updates, ...actionUpdates };
+      }
+
+      // effectsがある場合は適用
       if (choice.effects) {
-        const updates: Partial<GameStatus> = { ...status };
-        
         if (choice.effects.hp !== undefined) {
           updates.hp = Math.max(0, (status.hp || 0) + choice.effects.hp);
         }
@@ -147,9 +153,9 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
             [choice.effects.addSkill]: initializeSkillValues()[choice.effects.addSkill] || 0
           };
         }
-
-        updateStatus(updates);
       }
+
+      updateStatus(updates);
 
       // 結果テキストをログに追加
       if (choice.result) {
@@ -158,7 +164,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
 
       // 次のシーンへ移動
       if (choice.nextScene) {
-        const nextScene = scenarioData.scenes.find(s => s.id === choice.nextScene);
+        const nextScene = scenarioData.find(s => s.id === choice.nextScene);
         if (nextScene) {
           setCurrentScene(nextScene);
           addToLogs(`\n--- ${nextScene.title} ---`);
@@ -193,10 +199,10 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       clearedEndings: status.clearedEndings, // エンディングは保持
       loopCount: (status.loopCount || 1) + 1,
     });
-    setCurrentScene(scenarioData.scenes[0]);
+    setCurrentScene(scenarioData[0]);
     setLogs([
-      `--- ${scenarioData.scenes[0].title} ---`,
-      scenarioData.scenes[0].description
+      `--- ${scenarioData[0].title} ---`,
+      scenarioData[0].description
     ]);
     setRollResults([]);
   };
