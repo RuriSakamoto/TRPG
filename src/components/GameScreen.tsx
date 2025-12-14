@@ -5,21 +5,24 @@ import { useTRPG } from '../hooks/useTRPG';
 import { CharacterCreation } from './CharacterCreation';
 
 export const GameScreen = () => {
-  const { status, currentScene, currentSceneId, logs, handleChoice, completeCharacterCreation } = useTRPG();
+  const { status, currentScene, logs, handleChoice, isCharacterCreated, initCharacter } = useTRPG();
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
-  // ★キャラメイク画面への分岐
-  if (currentSceneId === 'character_creation') {
-    return <CharacterCreation onComplete={completeCharacterCreation} />;
+  // キャラクター未作成時は作成画面を表示
+  if (!isCharacterCreated) {
+    return <CharacterCreation onComplete={initCharacter} />;
   }
 
   if (!currentScene) return <div className="text-white p-10">Loading...</div>;
 
-  // ターン数から時刻を計算 (1ターン30分経過)
+  const bgStyle = currentScene.backgroundImage
+    ? { backgroundImage: `url(${currentScene.backgroundImage})` }
+    : { backgroundColor: '#1a1a2e' };
+
   const getCurrentTime = () => {
     const startHour = 21;
     const minutesPerTurn = 30;
@@ -33,21 +36,15 @@ export const GameScreen = () => {
 
   const displayText = currentScene.text.replace('{{TIME}}', getCurrentTime());
 
-  const bgStyle = currentScene.backgroundImage
-    ? { backgroundImage: `url(${currentScene.backgroundImage})` }
-    : { backgroundColor: '#1a1a2e' };
-
   return (
     <div 
       className="relative w-full h-screen bg-cover bg-center overflow-hidden font-sans text-white select-none"
       style={bgStyle}
     >
-      {/* 背景 */}
       {!currentScene.backgroundImage && (
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-slate-800" />
       )}
 
-      {/* 立ち絵 */}
       {currentScene.characterImage && (
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none z-0">
           <img 
@@ -58,13 +55,21 @@ export const GameScreen = () => {
         </div>
       )}
 
-      {/* 上部ステータス */}
+      {/* 上部ステータスバー */}
       <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-10 bg-gradient-to-b from-black/80 to-transparent">
         <div className="text-sm text-gray-300">
           <p>周回数: <span className="text-yellow-400 font-bold">{status.loopCount}</span></p>
           {status.clearedEndings.includes('true_end') && <span className="text-green-400 text-xs">★ True End済</span>}
         </div>
         <div className="flex gap-4 md:gap-6 text-sm font-bold drop-shadow-md">
+          {/* 新規ステータス表示 */}
+          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">STR</span><span>{status.str}</span></div>
+          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">DEX</span><span>{status.dex}</span></div>
+          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">POW</span><span>{status.pow}</span></div>
+          <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">APP</span><span>{status.app}</span></div>
+          
+          <div className="w-px bg-gray-600 mx-1"></div>
+          
           <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">SAN値</span><span className={status.san < 30 ? "text-red-500" : "text-green-400"}>{status.san}</span></div>
           <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">好感度</span><span className="text-pink-400">{status.affection}</span></div>
           <div className="flex flex-col items-center"><span className="text-[10px] text-gray-400">オタク度</span><span className="text-yellow-400">{status.otakuLevel}</span></div>
@@ -72,7 +77,7 @@ export const GameScreen = () => {
         </div>
       </div>
 
-      {/* ログウィンドウ (右側サイドバー) */}
+      {/* ログウィンドウ */}
       <div className="absolute top-20 right-0 w-64 h-[calc(100vh-300px)] z-10 pointer-events-none hidden md:flex flex-col items-end pr-4">
         <div className="w-full h-full bg-gradient-to-l from-black/80 to-transparent border-r-4 border-green-900/30 rounded-l-xl p-4 flex flex-col shadow-lg backdrop-blur-sm overflow-hidden">
           <div className="text-xs text-green-500 font-bold border-b border-green-900/50 pb-2 mb-2 text-right">
@@ -90,9 +95,8 @@ export const GameScreen = () => {
         </div>
       </div>
 
-      {/* 下部メインエリア */}
+      {/* メインエリア */}
       <div className="absolute bottom-0 left-0 w-full h-full flex flex-col justify-end pb-4 px-4 md:pb-8 md:px-12 z-20 pointer-events-none">
-        {/* 選択肢 */}
         <div className="w-full flex flex-col items-center gap-3 mb-6 pointer-events-auto">
           {currentScene.choices.map((choice, index) => {
             if (choice.condition && !choice.condition(status)) return null;
@@ -113,10 +117,9 @@ export const GameScreen = () => {
           })}
         </div>
 
-        {/* メッセージウィンドウ */}
         <div className="w-full max-w-5xl mx-auto bg-black/85 border-2 border-gray-600 rounded-xl p-6 md:p-8 shadow-2xl backdrop-blur-md min-h-[180px] md:min-h-[200px] relative pointer-events-auto">
           <div className="absolute -top-4 left-6 md:left-10 bg-indigo-600 px-6 py-1 rounded-full text-sm md:text-base font-bold shadow-lg border border-indigo-400">
-            {status.playerName}
+            アベンチュリン
           </div>
           <p className="text-base md:text-xl leading-relaxed whitespace-pre-wrap text-gray-100 font-medium">
             {displayText}
