@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { GameStatus, Scene, Choice, RollResult, initializeSkillValues } from '../types/game';
 import { scenarioData } from '../data/scenario';
+import { saveEndingToStorage } from '../lib/storage';
 
 export const useTRPG = () => {
   const [status, setStatus] = useState<GameStatus>({
@@ -111,6 +112,8 @@ export const useTRPG = () => {
       if (updates.clearedEndings && updates.clearedEndings.length > status.clearedEndings.length) {
         const newEnding = updates.clearedEndings[updates.clearedEndings.length - 1];
         reachEnding(newEnding);
+        // ★★★ LocalStorageに保存 ★★★
+        saveEndingToStorage(newEnding);
       }
 
       setStatus(prev => ({ ...prev, ...updates }));

@@ -100,3 +100,53 @@ export const initializeSkillValues = (status: Partial<GameStatus>): Record<strin
   
   return skillValues;
 };
+
+// ★★★ 以下、エンディング情報の型定義を追加 ★★★
+
+// エンディング情報の型定義
+export type EndingInfo = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+};
+
+// 全エンディングの定義
+export const ENDINGS: Record<string, EndingInfo> = {
+  true_end: {
+    id: 'true_end',
+    name: 'True End',
+    description: '究極の解釈一致',
+    icon: '👑',
+    color: 'from-yellow-400 to-orange-500'
+  },
+  ceo_end: {
+    id: 'ceo_end',
+    name: 'CEO End',
+    description: '資本主義の勝利',
+    icon: '💰',
+    color: 'from-green-400 to-emerald-600'
+  },
+  secret_end: {
+    id: 'secret_end',
+    name: 'Secret End',
+    description: '秘密の補習',
+    icon: '💕',
+    color: 'from-pink-400 to-rose-600'
+  },
+  normal_end: {
+    id: 'normal_end',
+    name: 'Normal End',
+    description: '妥協と供給',
+    icon: '⭐',
+    color: 'from-blue-400 to-indigo-500'
+  },
+  bad_end: {
+    id: 'bad_end',
+    name: 'Bad End',
+    description: '虚無',
+    icon: '💔',
+    color: 'from-gray-400 to-gray-600'
+  }
+};
