@@ -3,14 +3,13 @@ import { Scene } from '../../types/game';
 export const chapter1: Scene[] = [
   {
     id: 'chap1_intro',
-    text: '【第1章：アベンチュリンの”推し活”】\n\n「推し活とは、時間との勝負だ」\n\n限られた時間の中で、いかに効率よく成分（レイシオ）を摂取し、明日への活力を得るか。\n今日のミッションは以下の通りだ。\n\n1. 祭壇の設営と礼拝\n2. ネット上の供給確認\n3. 証拠隠滅して何食わぬ顔で出迎える',
+    text: '【第1章：アベンチュリンの"推し活"】\n\n「推し活とは、時間との勝負だ」\n\n限られた時間の中で、いかに効率よく成分（レイシオ）を摂取し、明日への活力を得るか。\n今日のミッションは以下の通りだ。\n\n1. 祭壇の設営と礼拝\n2. ネット上の供給確認\n3. 証拠隠滅して何食わぬ顔で出迎える',
     choices: [
       { text: 'ミッション開始', nextSceneId: 'chap1_action_select', action: (s) => ({ ...s, turn: 0 }) }
     ]
   },
   {
     id: 'chap1_action_select',
-    // {{TIME}} は GameScreen.tsx で自動的に 21:00, 21:30... に置換されます
     text: '現在時刻：{{TIME}}。\nレイシオの帰宅（23:00）まで、あと数ターン行動できそうだ。\n何をしようか？',
     choices: [
       { 
@@ -40,6 +39,38 @@ export const chapter1: Scene[] = [
     text: '祭壇の中央には、額装されたレイシオの写真（隠し撮り・寝顔）。\nLEDキャンドルの揺らめきが、彼の整った顔立ちを神々しく照らし出している。\n\n「ああ…教授…今日も眉間のシワが美しいよ…」\n「その不機嫌そうな口元、最高だね…」\n\n拝むことで心が洗われる。明日も頑張って生きよう。',
     choices: [
       { 
+        text: '【目星判定】新しい魅力を発見する', 
+        nextSceneId: 'chap1_altar_after',
+        skillCheck: {
+          skillName: '目星',
+          successSceneId: 'chap1_altar_critical_success',
+          failureSceneId: 'chap1_altar_after',
+          criticalSceneId: 'chap1_altar_critical_success'
+        }
+      },
+      { 
+        text: 'そのまま次の行動へ', 
+        nextSceneId: 'chap1_altar_after',
+        action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
+      }
+    ]
+  },
+  {
+    id: 'chap1_altar_critical_success',
+    text: '祭壇を眺めていると、写真の中のレイシオの表情に新たな発見が！\n\n「待って…この角度から見ると、耳の形が完璧すぎる…！」\n「それに、この髪の流れ方…計算されたような美しさ…！」\n\n新たな"推しポイント"を発見した喜びで、心が満たされる。\n（SAN値大幅回復＋オタク度上昇）',
+    choices: [
+      { 
+        text: '至福の時間だった', 
+        nextSceneId: 'chap1_check_event',
+        action: (s) => ({ ...s, san: Math.min(s.san + 25, 90), otakuLevel: s.otakuLevel + 2, turn: s.turn + 1 }) 
+      }
+    ]
+  },
+  {
+    id: 'chap1_altar_after',
+    text: '祭壇を愛でることで、心が落ち着いた。\n（SAN値回復）',
+    choices: [
+      { 
         text: '次の行動へ', 
         nextSceneId: 'chap1_check_event',
         action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
@@ -59,7 +90,38 @@ export const chapter1: Scene[] = [
   },
   {
     id: 'chap1_sns',
-    text: 'SNSを開く。\n『【悲報】レイシオ教授、また学会で論破祭り』というスレが立っている。\n\n「ふふ、相変わらずだね」\n動画を見ると、相手を完膚なきまでに叩きのめすレイシオの姿が。\n「この冷徹な目！ 蔑むような視線！ たまらないね！」\n興奮して「いいね」を連打した。',
+    text: 'SNSを開く。\n『【悲報】レイシオ教授、また学会で論破祭り』というスレが立っている。\n\n「ふふ、相変わらずだね」\n動画を見ると、相手を完膚なきまでに叩きのめすレイシオの姿が。',
+    choices: [
+      { 
+        text: '【コンピューター判定】効率的にエゴサする', 
+        nextSceneId: 'chap1_sns_after',
+        skillCheck: {
+          skillName: 'コンピューター',
+          successSceneId: 'chap1_sns_success',
+          failureSceneId: 'chap1_sns_after'
+        }
+      },
+      { 
+        text: 'そのまま眺める', 
+        nextSceneId: 'chap1_sns_after',
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: s.turn + 1 }) 
+      }
+    ]
+  },
+  {
+    id: 'chap1_sns_success',
+    text: '検索スキルを駆使して、レイシオ関連の情報を効率的に収集した！\n\n「おっと、こんなところに未公開の講義動画が…」\n「それに、ファンアートも大量に…保存保存！」\n\n大量の"成分"を摂取できた。\n（オタク度大幅上昇＋好感度上昇）',
+    choices: [
+      { 
+        text: '大満足だ', 
+        nextSceneId: 'chap1_check_event',
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, affection: s.affection + 2, turn: s.turn + 1 }) 
+      }
+    ]
+  },
+  {
+    id: 'chap1_sns_after',
+    text: '「この冷徹な目！ 蔑むような視線！ たまらないね！」\n興奮して「いいね」を連打した。',
     choices: [
       { 
         text: '次の行動へ', 
@@ -69,21 +131,19 @@ export const chapter1: Scene[] = [
     ]
   },
 
-  // --- イベント発生判定 (運要素なし・ターン固定) ---
+  // --- イベント発生判定 ---
   {
     id: 'chap1_check_event',
     text: '（時計の針が進む…）',
     choices: [
       { 
         text: '……おや？', 
-        nextSceneId: 'chap1_topaz_call',
-        // ターン2 (22:00) の時だけ強制的に電話イベントへ
+        nextSceneId: 'chap1_listen_check',
         condition: (s) => s.turn === 2
       },
       {
         text: 'まだ時間はある',
         nextSceneId: 'chap1_action_select',
-        // それ以外は行動選択へ戻る
         condition: (s) => s.turn !== 2 && s.turn < 4
       },
       {
@@ -94,7 +154,65 @@ export const chapter1: Scene[] = [
     ]
   },
 
-  // --- トパーズからの電話 (固定イベント) ---
+  // --- 聞き耳判定（新規追加）---
+  {
+    id: 'chap1_listen_check',
+    text: '祭壇を愛でていると、遠くで物音が聞こえた気がした…？\n\n「……気のせいかな？」',
+    choices: [
+      { 
+        text: '【聞き耳判定】耳を澄ます', 
+        nextSceneId: 'chap1_topaz_call',
+        skillCheck: {
+          skillName: '聞き耳',
+          successSceneId: 'chap1_listen_success',
+          failureSceneId: 'chap1_topaz_call'
+        }
+      },
+      { 
+        text: '気にせず続ける', 
+        nextSceneId: 'chap1_topaz_call'
+      }
+    ]
+  },
+  {
+    id: 'chap1_listen_success',
+    text: '耳を澄ますと…廊下から足音が近づいてくる！\n\n「まずい、レイシオが早く帰ってきた！？」\n\n慌てて祭壇を片付け始める。\n事前に気づけたおかげで、ギリギリ間に合いそうだ！',
+    choices: [
+      { 
+        text: '【隠れる判定】急いで片付ける', 
+        nextSceneId: 'chap1_topaz_call',
+        skillCheck: {
+          skillName: '隠れる',
+          successSceneId: 'chap1_hide_success',
+          failureSceneId: 'chap1_topaz_call',
+          criticalSceneId: 'chap1_hide_critical'
+        }
+      }
+    ]
+  },
+  {
+    id: 'chap1_hide_critical',
+    text: '完璧だ！ 祭壇は跡形もなく消え、部屋は何事もなかったかのように整っている。\n\n「ふう…危なかった。でも、これで証拠は完全に隠滅したね」\n\nしかし、足音は止まった。\nどうやらトパーズだったようだ。\n\n（SAN値回復＋隠蔽スキル上昇）',
+    choices: [
+      { 
+        text: '安堵する', 
+        nextSceneId: 'chap1_topaz_call',
+        action: (s) => ({ ...s, san: Math.min(s.san + 10, 90) }) 
+      }
+    ]
+  },
+  {
+    id: 'chap1_hide_success',
+    text: '何とか祭壇を片付けた。\n少し雑だが、パッと見では分からないだろう。\n\nしかし、足音は止まった。どうやらトパーズだったようだ。',
+    choices: [
+      { 
+        text: '胸を撫で下ろす', 
+        nextSceneId: 'chap1_topaz_call'
+      }
+    ]
+  },
+
+  // --- トパーズからの電話 ---
   {
     id: 'chap1_topaz_call',
     text: '端末が震えた。画面には「トパーズ」の文字。\n\n「……やれやれ。この時間に連絡してくるなんて、相変わらずワーカーホリックだね」\n\n無視することもできるが、後でカブに噛まれるのも面倒だ。\nどうする？',

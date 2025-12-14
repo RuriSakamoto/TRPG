@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GameStatus, Scene, Choice, RollResult } from '../types/game';
+import { GameStatus, Scene, Choice, RollResult, initializeSkillValues } from '../types/game';
 import { scenarioData } from '../data/scenario';
 
 export const useTRPG = () => {
@@ -12,7 +12,8 @@ export const useTRPG = () => {
     affection: 0,
     otakuLevel: 0,
     items: [],
-    skills: [], // ★追加: 初期は空
+    skills: [],
+    skillValues: {}, // 初期は空
     turn: 0,
     clearedEndings: [],
     loopCount: 1,
@@ -54,31 +55,49 @@ export const useTRPG = () => {
     }
   };
 
-  // ★追加: 初期ステータスを上書きする関数
+  // 初期ステータスを上書きする関数（CharacterCreatorからの引き継ぎ用）
   const setInitialStatus = (initial: Partial<GameStatus>) => {
-    setStatus(prev => ({ ...prev, ...initial }));
+    // 能力値が設定されている場合、技能値を自動計算
+    const skillValues = initializeSkillValues(initial);
+    
+    setStatus(prev => ({ 
+      ...prev, 
+      ...initial,
+      skillValues: { ...skillValues, ...initial.skillValues } // 既存の技能値を上書き可能
+    }));
   };
 
   const handleChoice = (choice: Choice) => {
     if (choice.skillCheck) {
-      let { skillName, targetValue, successSceneId, failureSceneId } = choice.skillCheck;
+      const { skillName, targetValue, successSceneId, failureSceneId, criticalSceneId, fumbleSceneId } = choice.skillCheck;
       
-      // オタク度による補正
+      // 技能値の取得（指定がない場合はskillValuesから）
+      let finalTargetValue = targetValue;
+      if (finalTargetValue === undefined) {
+        finalTargetValue = status.skillValues[skillName] || 50;
+      }
+      
+      // オタク度による補正（情熱・言いくるめ技能）
       if (skillName === '情熱' || skillName === '言いくるめ') {
-        targetValue += status.otakuLevel * 5;
+        finalTargetValue += status.otakuLevel * 5;
       }
 
-      // ★追加: 習得済み技能によるボーナス (例: +20%)
+      // 習得済み技能によるボーナス（後方互換性）
       if (status.skills.includes(skillName)) {
-        targetValue += 20;
+        finalTargetValue += 20;
       }
 
-      const { result, value } = rollDice(targetValue);
+      const { result, value } = rollDice(finalTargetValue);
       
-      const logText = `判定: ${skillName} (${targetValue}%) → 出目:${value} [${resultText[result]}]`;
+      const logText = `【判定】${skillName} (目標値:${finalTargetValue}%) → 出目:${value} ⇒ ${resultText[result]}`;
       setLogs(prev => [...prev, logText]);
 
-      if (result === 'success' || result === 'critical') {
+      // 結果に応じたシーン遷移
+      if (result === 'critical' && criticalSceneId) {
+        setCurrentSceneId(criticalSceneId);
+      } else if (result === 'fumble' && fumbleSceneId) {
+        setCurrentSceneId(fumbleSceneId);
+      } else if (result === 'success' || result === 'critical') {
         setCurrentSceneId(successSceneId);
       } else {
         setCurrentSceneId(failureSceneId);
@@ -96,9 +115,9 @@ export const useTRPG = () => {
 
       setStatus(prev => ({ ...prev, ...updates }));
       
-      if (updates.san) setLogs(prev => [...prev, `SAN値変動: ${updates.san - status.san}`]);
-      if (updates.affection) setLogs(prev => [...prev, `好感度変動: ${updates.affection - status.affection}`]);
-      if (updates.otakuLevel) setLogs(prev => [...prev, `オタク度上昇`]);
+      if (updates.san !== undefined) setLogs(prev => [...prev, `SAN値変動: ${updates.san > status.san ? '+' : ''}${updates.san - status.san}`]);
+      if (updates.affection !== undefined) setLogs(prev => [...prev, `好感度変動: ${updates.affection > status.affection ? '+' : ''}${updates.affection - status.affection}`]);
+      if (updates.otakuLevel !== undefined && updates.otakuLevel > status.otakuLevel) setLogs(prev => [...prev, `オタク度上昇！`]);
     }
 
     setCurrentSceneId(choice.nextSceneId);
@@ -109,6 +128,6 @@ export const useTRPG = () => {
     currentScene,
     logs,
     handleChoice,
-    setInitialStatus // ★追加: エクスポート
+    setInitialStatus
   };
 };
