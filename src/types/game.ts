@@ -34,7 +34,7 @@ export type GameStatus = {
 // 利用可能な技能の定数リスト
 export const AVAILABLE_SKILLS = [
   '目星', '聞き耳', '図書館', '隠れる', '忍び歩き',
-  '心理学', '説得', '言いくるめ', 'オカルト', 'コンピューター', '情熱'
+  '心理学', '説得', '言いくるめ', 'オカルト', 'コンピューター', '芸術', '幸運', '情熱'
 ] as const;
 
 // 技能の初期値計算式（能力値×倍率）
@@ -49,6 +49,8 @@ export const SKILL_FORMULAS: Record<string, { stat: keyof GameStatus; multiplier
   '言いくるめ': { stat: 'APP', multiplier: 5 },
   'オカルト': { stat: 'INT', multiplier: 5 },
   'コンピューター': { stat: 'INT', multiplier: 5 },
+  '芸術': { stat: 'POW', multiplier: 5 },
+  '幸運': { stat: 'LUK', multiplier: 1 }, // 幸運はLUK値そのまま
   '情熱': { stat: 'POW', multiplier: 10 }, // オリジナル技能
 };
 
@@ -92,8 +94,8 @@ export const initializeSkillValues = (status: Partial<GameStatus>): Record<strin
   });
   
   // オタク度による「情熱」技能の補正
-  if (status.otakuLevel !== undefined) {
-    skillValues['情熱'] = (status.POW || 10) * 10 + status.otakuLevel * 5;
+  if (status.otakuLevel !== undefined && status.POW !== undefined) {
+    skillValues['情熱'] = status.POW * 10 + status.otakuLevel * 5;
   }
   
   return skillValues;
