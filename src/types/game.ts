@@ -1,12 +1,12 @@
 export type GameStatus = {
   hp: number;
-  san: number;       // メンタル/尊さ耐久値
-  affection: number; // レイシオからの好感度
-  otakuLevel: number; // オタク度（解釈の深さ）
+  san: number;
+  affection: number;
+  otakuLevel: number;
   items: string[];
-  turn: number;      // 経過ターン（第1章で使用）
-  clearedEndings: string[]; // 到達したエンディングID
-  loopCount: number;        // 周回数
+  turn: number;
+  clearedEndings: string[];
+  loopCount: number;
 };
 
 export type RollResult = 'critical' | 'success' | 'failure' | 'fumble';
@@ -14,8 +14,8 @@ export type RollResult = 'critical' | 'success' | 'failure' | 'fumble';
 export type Choice = {
   text: string;
   nextSceneId: string;
-  condition?: (status: GameStatus) => boolean; // 出現条件
-  action?: (status: GameStatus) => Partial<GameStatus>; // ステータス変化
+  condition?: (status: GameStatus) => boolean;
+  action?: (status: GameStatus) => Partial<GameStatus>;
   skillCheck?: {
     skillName: string;
     targetValue: number;
@@ -27,6 +27,7 @@ export type Choice = {
 export type Scene = {
   id: string;
   text: string;
-  backgroundImage?: string; // 将来的な拡張用
+  backgroundImage?: string; // 背景画像のパス (例: '/bg/office.jpg')
+  characterImage?: string;  // 立ち絵画像のパス (例: '/chara/ratio_angry.png')
   choices: Choice[];
 };

@@ -1,25 +1,19 @@
-'use client';  // ← ★この1行を必ず一番上に追加してください！
+'use client';
 
 import { useState } from 'react';
 import { GameStatus, Scene, Choice, RollResult } from '../types/game';
 import { scenarioData } from '../data/scenario';
 
 export const useTRPG = () => {
-  const [status, setStatus] = useState<GameStatus>({
-    hp: 10,
-    san: 60,
-    affection: 0,
-    otakuLevel: 0,
-    items: [],
-    turn: 0,
-    clearedEndings: [],
-    loopCount: 1,
-  });
+  // ... (state定義はそのまま) ...
 
-  const [currentSceneId, setCurrentSceneId] = useState<string>('start');
-  const [logs, setLogs] = useState<string[]>(['ゲーム開始']);
-
-  const currentScene = scenarioData.find(s => s.id === currentSceneId);
+  // 日本語変換用の辞書
+  const resultText: Record<RollResult, string> = {
+    critical: 'クリティカル！',
+    success: '成功',
+    failure: '失敗',
+    fumble: 'ファンブル！'
+  };
 
   const rollDice = (target: number): { result: RollResult; value: number } => {
     const value = Math.floor(Math.random() * 100) + 1;
@@ -37,14 +31,14 @@ export const useTRPG = () => {
     if (choice.skillCheck) {
       let { skillName, targetValue, successSceneId, failureSceneId } = choice.skillCheck;
       
-      // オタク度による補正（情熱判定など）
       if (skillName === '情熱' || skillName === '言いくるめ') {
         targetValue += status.otakuLevel * 5;
       }
 
       const { result, value } = rollDice(targetValue);
       
-      const logText = `判定: ${skillName} (目標${targetValue}) → 出目:${value} [${result}]`;
+      // ★ここを修正：日本語でログ出力
+      const logText = `判定: ${skillName} (${targetValue}%) → 出目:${value} [${resultText[result]}]`;
       setLogs(prev => [...prev, logText]);
 
       if (result === 'success' || result === 'critical') {
@@ -62,15 +56,11 @@ export const useTRPG = () => {
       
       if (updates.san) setLogs(prev => [...prev, `SAN値変動: ${updates.san - status.san}`]);
       if (updates.affection) setLogs(prev => [...prev, `好感度変動: ${updates.affection - status.affection}`]);
+      if (updates.otakuLevel) setLogs(prev => [...prev, `オタク度上昇`]);
     }
 
     setCurrentSceneId(choice.nextSceneId);
   };
 
-  return {
-    status,
-    currentScene,
-    logs,
-    handleChoice
-  };
+  // ... (returnなどはそのまま) ...
 };
