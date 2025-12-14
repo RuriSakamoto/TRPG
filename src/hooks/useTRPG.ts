@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { GameStatus, Scene, Choice, RollResult, initializeSkillValues } from '../types/game';
 import { scenarioData } from '../data/scenario';
 import { saveEndingToStorage } from '../lib/storage';
@@ -39,7 +39,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     ]);
   };
 
-  const updateStatus = (updates: Partial<GameStatus>) => {
+  const updateStatus = useCallback((updates: Partial<GameStatus>) => {
     setStatus(prev => {
       const newStatus = { ...prev, ...updates };
       
@@ -52,7 +52,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       
       return newStatus;
     });
-  };
+  }, [isLoggedIn]);
 
   const addToLogs = (text: string) => {
     setLogs(prev => [...prev, text]);
@@ -89,56 +89,21 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     return result;
   };
 
-  const handleChoice = (choice: Choice) => {
+  const handleChoice = useCallback((choice: Choice) => {
     // 選択肢のテキストをログに追加
     addToLogs(`> ${choice.text}`);
 
-    // 現在のステータスを保持
-    let currentStatus = { ...status };
-
-    // スキルチェックがある場合
-    if (choice.skillCheck) {
-      const result = rollDice(
-        choice.skillCheck.skillName,
-        choice.skillCheck.targetValue
-      );
-
-      // action関数がある場合は先に実行してステータスを更新
-      if (choice.action) {
-        const newStatus = choice.action(currentStatus);
-        // action関数が返した新しいステータスで更新
-        updateStatus(newStatus);
-        currentStatus = newStatus;
-      }
-
-      // 成功/失敗に応じた処理
-      if (result.success && choice.skillCheck.onSuccess) {
-        const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onSuccess);
-        if (nextScene) {
-          setCurrentScene(nextScene);
-          addToLogs(`\n--- ${nextScene.title} ---`);
-          addToLogs(nextScene.description);
-        }
-      } else if (!result.success && choice.skillCheck.onFailure) {
-        const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onFailure);
-        if (nextScene) {
-          setCurrentScene(nextScene);
-          addToLogs(`\n--- ${nextScene.title} ---`);
-          addToLogs(nextScene.description);
-        }
-      }
-    } else {
-      // 通常の選択肢処理
+    // 状態更新を行う関数
+    const processChoice = (currentStatus: GameStatus) => {
       let updates: Partial<GameStatus> = {};
 
       // action関数がある場合は実行
       if (choice.action) {
-        const newStatus = choice.action(currentStatus);
-        // action関数が返した完全な新しいステータスを使用
-        updates = newStatus;
+        const actionUpdates = choice.action(currentStatus);
+        updates = { ...updates, ...actionUpdates };
       }
 
-      // effectsがある場合は適用（action関数の結果に追加）
+      // effectsがある場合は適用
       if (choice.effects) {
         if (choice.effects.hp !== undefined) {
           updates.hp = Math.max(0, (currentStatus.hp || 0) + choice.effects.hp);
@@ -167,10 +132,45 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
         }
       }
 
+      return updates;
+    };
+
+    // スキルチェックがある場合
+    if (choice.skillCheck) {
+      const result = rollDice(
+        choice.skillCheck.skillName,
+        choice.skillCheck.targetValue
+      );
+
+      // 状態更新
+      const updates = processChoice(status);
+      if (Object.keys(updates).length > 0) {
+        updateStatus(updates);
+      }
+
+      // 成功/失敗に応じた処理
+      if (result.success && choice.skillCheck.onSuccess) {
+        const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onSuccess);
+        if (nextScene) {
+          setCurrentScene(nextScene);
+          addToLogs(`\n--- ${nextScene.title} ---`);
+          addToLogs(nextScene.description);
+        }
+      } else if (!result.success && choice.skillCheck.onFailure) {
+        const nextScene = scenarioData.find(s => s.id === choice.skillCheck!.onFailure);
+        if (nextScene) {
+          setCurrentScene(nextScene);
+          addToLogs(`\n--- ${nextScene.title} ---`);
+          addToLogs(nextScene.description);
+        }
+      }
+    } else {
+      // 通常の選択肢処理
+      const updates = processChoice(status);
+
       // ステータスを更新
       if (Object.keys(updates).length > 0) {
         updateStatus(updates);
-        currentStatus = { ...currentStatus, ...updates };
       }
 
       // 結果テキストをログに追加
@@ -188,16 +188,19 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
 
           // エンディングチェック
           if (nextScene.isEnding && nextScene.endingId) {
-            const newClearedEndings = [...currentStatus.clearedEndings];
-            if (!newClearedEndings.includes(nextScene.endingId)) {
-              newClearedEndings.push(nextScene.endingId);
-              updateStatus({ clearedEndings: newClearedEndings });
-            }
+            setStatus(prev => {
+              const newClearedEndings = [...prev.clearedEndings];
+              if (!newClearedEndings.includes(nextScene.endingId!)) {
+                newClearedEndings.push(nextScene.endingId!);
+                return { ...prev, clearedEndings: newClearedEndings };
+              }
+              return prev;
+            });
           }
         }
       }
     }
-  };
+  }, [status, rollDice, updateStatus]);
 
   const resetGame = () => {
     setStatus({
