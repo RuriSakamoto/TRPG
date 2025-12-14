@@ -10,16 +10,37 @@ export const rollMultipleDice = (count: number, sides: number): number => {
   return total;
 };
 
-export const parseDiceFormula = (formula: string): number => {
-  // "3D6" や "2D6+6" のような文字列をパース
-  const match = formula.match(/(\d+)D(\d+)(?:\+(\d+))?/i);
-  if (!match) return 0;
-  
+export const parseDiceFormula = (formula: string): { total: number; rolls: number[] } => {
+  // "3D6*5" や "(2D6+6)*5" のような文字列をパース
+  let multiplier = 1;
+  let baseFormula = formula;
+
+  // 乗算を処理
+  if (formula.includes('*')) {
+    const parts = formula.split('*');
+    baseFormula = parts[0].replace(/[()]/g, ''); // 括弧を削除
+    multiplier = parseInt(parts[1]);
+  }
+
+  // ダイス式をパース: "3D6" や "2D6+6"
+  const match = baseFormula.match(/(\d+)D(\d+)(?:\+(\d+))?/i);
+  if (!match) return { total: 0, rolls: [] };
+
   const count = parseInt(match[1]);
   const sides = parseInt(match[2]);
   const bonus = match[3] ? parseInt(match[3]) : 0;
-  
-  return rollMultipleDice(count, sides) + bonus;
+
+  const rolls: number[] = [];
+  let sum = 0;
+  for (let i = 0; i < count; i++) {
+    const roll = rollDice(sides);
+    rolls.push(roll);
+    sum += roll;
+  }
+
+  const total = (sum + bonus) * multiplier;
+
+  return { total, rolls };
 };
 
 export const calculateDB = (str: number, siz: number): string => {

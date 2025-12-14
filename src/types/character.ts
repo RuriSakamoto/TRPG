@@ -23,19 +23,15 @@ export type CharacterStats = {
   interestPoints: number;
 };
 
-export type DiceFormula = {
-  dice: string; // "3D6", "2D6+6" など
-  multiplier?: number; // 7版では×5
-};
-
-export const STAT_FORMULAS: Record<keyof Pick<CharacterStats, 'STR' | 'CON' | 'POW' | 'DEX' | 'APP' | 'SIZ' | 'INT' | 'EDU' | 'LUK'>, DiceFormula> = {
-  STR: { dice: '3D6', multiplier: 5 },
-  CON: { dice: '3D6', multiplier: 5 },
-  POW: { dice: '3D6', multiplier: 5 },
-  DEX: { dice: '3D6', multiplier: 5 },
-  APP: { dice: '3D6', multiplier: 5 },
-  SIZ: { dice: '2D6+6', multiplier: 5 },
-  INT: { dice: '2D6+6', multiplier: 5 },
-  EDU: { dice: '2D6+6', multiplier: 5 },
-  LUK: { dice: '3D6', multiplier: 5 },
+// ダイス式を文字列形式に変更
+export const STAT_FORMULAS: Record<keyof Pick<CharacterStats, 'STR' | 'CON' | 'POW' | 'DEX' | 'APP' | 'SIZ' | 'INT' | 'EDU' | 'LUK'>, string> = {
+  STR: '3D6*5',
+  CON: '3D6*5',
+  POW: '3D6*5',
+  DEX: '3D6*5',
+  APP: '3D6*5',
+  SIZ: '(2D6+6)*5',
+  INT: '(2D6+6)*5',
+  EDU: '(2D6+6)*5',
+  LUK: '3D6*5',
 };
