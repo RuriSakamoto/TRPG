@@ -17,17 +17,17 @@ export const chapter1: Scene[] = [
     text: '現在時刻：{{TIME}}。\nレイシオの帰宅（23:00）まで、あと数ターン行動できそうだ。\n何をしようか？',
     choices: [
       { 
-        text: '祭壇を愛でる (SAN値回復)', 
+        text: '祭壇を愛でる', 
         nextScene: 'chap1_altar',
         condition: (s) => (s.turn || 0) < 5
       },
       { 
-        text: 'グッズのメンテナンス (オタク度UP)', 
+        text: 'グッズのメンテナンス', 
         nextScene: 'chap1_goods',
         condition: (s) => (s.turn || 0) < 5
       },
       { 
-        text: 'カンパニーの端末でエゴサ (情報収集)', 
+        text: 'カンパニーの端末でエゴサ', 
         nextScene: 'chap1_sns',
         condition: (s) => (s.turn || 0) < 5
       },
@@ -64,7 +64,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_altar_critical_success',
     title: '新たな発見',
     description: '推しの新たな魅力を発見',
-    text: '祭壇を眺めていると、写真の中のレイシオの表情に新たな発見が！\n\n「待って…この角度から見ると、耳の形が完璧すぎる…！」\n「それに、この髪の流れ方…計算されたような美しさ…！」\n\n新たな"推しポイント"を発見した喜びで、心が満たされる。\n（SAN値大幅回復＋オタク度上昇）',
+    text: '祭壇を眺めていると、写真の中のレイシオの表情に新たな発見が！\n\n「待って…この角度から見ると、耳の形が完璧すぎる…！」\n「それに、この髪の流れ方…計算されたような美しさ…！」\n\n新たな"推しポイント"を発見した喜びで、心が満たされる。\n（SAN値大幅回復）',
     choices: [
       { 
         text: '至福の時間だった', 
@@ -125,7 +125,7 @@ export const chapter1: Scene[] = [
     id: 'chap1_sns_success',
     title: '大量の成分摂取',
     description: '効率的な情報収集に成功',
-    text: '検索スキルを駆使して、レイシオ関連の情報を効率的に収集した！\n\n「おっと、こんなところに未公開の講義動画が…」\n「それに、ファンアートも大量に…保存保存！」\n\n大量の"成分"を摂取できた。\n（オタク度大幅上昇＋好感度上昇）',
+    text: '検索スキルを駆使して、レイシオ関連の情報を効率的に収集した！\n\n「おっと、こんなところに未公開の講義動画が…」\n「それに、ファンアートも大量に…保存保存！」\n\n大量の"成分"を摂取できた。',
     choices: [
       { 
         text: '大満足だ', 
@@ -243,7 +243,7 @@ export const chapter1: Scene[] = [
         nextScene: 'chap1_topaz_talk'
       },
       { 
-        text: '居留守を使う (SAN値減少)', 
+        text: '居留守を使う', 
         nextScene: 'chap1_after_topaz',
         action: (s) => ({ ...s, san: s.san - 5, turn: (s.turn || 0) + 1 }) 
       }
