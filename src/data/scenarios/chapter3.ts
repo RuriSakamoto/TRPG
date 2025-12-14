@@ -50,20 +50,31 @@ export const chapter3: Scene[] = [
     id: 'chap3_studio',
     text: 'いよいよ本番。\n監督の要求はエスカレートしていく。\n「もっと密着して！ 恋人繋ぎして！」\n\nレイシオの我慢も限界に近い。\n君の「解釈違いメーター」も爆発寸前だ。\nどうする？',
     choices: [
-      // True Endルート A: オタク度が高い場合
+      // ★追加: CEO End (金で解決)
+      {
+        text: '「いくらだ？ このスタジオごと買い取る」',
+        nextSceneId: 'end_ceo_route',
+        condition: (s) => s.otakuLevel >= 7 // かなり高いオタク度が必要
+      },
+      // ★追加: Secret End (2周目以降 & 高好感度)
+      {
+        text: 'レイシオの手を引いて逃走する',
+        nextSceneId: 'end_secret_route',
+        condition: (s) => s.loopCount >= 2 && s.affection >= 8
+      },
+      // True Endルート A
       { 
         text: '「もう限界だ！教授を解放しろ！」と暴れる', 
         nextSceneId: 'chap3_revolt',
-        condition: (s) => s.otakuLevel >= 5 // 第1章でグッズ磨き等を徹底していないと出ない
+        condition: (s) => s.otakuLevel >= 5
       },
-      // True Endルート B: 好感度が高い場合
+      // True Endルート B
       {
         text: 'レイシオを信じて目配せする',
         nextSceneId: 'chap3_ratio_counter',
-        // ★修正箇所: 条件を 3 -> 6 に引き上げ (第2章クリアで+3確定なので、第1章での積み上げが必要)
         condition: (s) => s.affection >= 6
       },
-      // Normal Endルート (条件を満たさない場合のデフォルト)
+      // Normal Endルート
       { 
         text: '仕事だと割り切って耐える', 
         nextSceneId: 'end_normal_route'
@@ -100,6 +111,40 @@ export const chapter3: Scene[] = [
         action: (s) => ({ 
           hp: 10, san: 60, affection: 0, items: [], otakuLevel: 0, turn: 0,
           clearedEndings: [...s.clearedEndings, 'true_end'],
+          loopCount: s.loopCount + 1
+        }) 
+      }
+    ]
+  },
+
+  // --- CEO End ルート (新規) ---
+  {
+    id: 'end_ceo_route',
+    text: '【CEO End: 資本主義の勝利】\n\n「うるさいな。この企画、僕が買い取るよ」\n君はブラックカードを取り出した。\n\n数分後、スタジオのオーナーは君になった。\n「さあ教授、僕の指示通りに動いてくれ。最高の映像を撮ろう」\n「……やれやれ。監督が君なら、少しはマシになるか」\n\n完成したPVは、君の性癖が詰め込まれたマニアックな傑作となった。\n（クリア特典：タイトル画面に「CEO」バッジ追加）',
+    choices: [
+      { 
+        text: 'タイトルへ戻る', 
+        nextSceneId: 'start', 
+        action: (s) => ({ 
+          hp: 10, san: 60, affection: 0, items: [], otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'ceo_end'],
+          loopCount: s.loopCount + 1
+        }) 
+      }
+    ]
+  },
+
+  // --- Secret End ルート (新規) ---
+  {
+    id: 'end_secret_route',
+    text: '【Secret End: 秘密の補習】\n\n「付き合いきれん。帰るぞ」\n君はレイシオの手を引き、スタジオを飛び出した。\n\n「おい、どこへ行く気だ」\n「君の研究室だよ。二人きりで、個人的な講義（ファンサ）をしてくれるんだろ？」\n\nレイシオは呆れたように笑った。\n「……高くつくぞ」\n\nその後の二人の時間は、誰にも邪魔されることはなかった。\n（クリア特典：タイトル画面に「Secret」バッジ追加）',
+    choices: [
+      { 
+        text: 'タイトルへ戻る', 
+        nextSceneId: 'start', 
+        action: (s) => ({ 
+          hp: 10, san: 60, affection: 0, items: [], otakuLevel: 0, turn: 0,
+          clearedEndings: [...s.clearedEndings, 'secret_end'],
           loopCount: s.loopCount + 1
         }) 
       }

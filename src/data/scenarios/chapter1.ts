@@ -1,11 +1,59 @@
 import { Scene } from '../../types/game';
 
 export const chapter1: Scene[] = [
+  // ... (冒頭部分はそのまま) ...
+
+  // --- ランダムイベント判定 (修正箇所) ---
+  {
+    id: 'chap1_event_check',
+    text: '（時計の針が進む…）\n何も起きなければいいが……。',
+    choices: [
+      { 
+        text: '運試し (LUCK)', 
+        nextSceneId: 'chap1_check_luck',
+        skillCheck: {
+          skillName: '幸運',
+          targetValue: 50, // 50%の確率で何も起きない
+          successSceneId: 'chap1_action_select', // 成功なら行動選択に戻る（イベントなし）
+          failureSceneId: 'chap1_random_event'   // 失敗ならトパーズから電話
+        }
+      }
+    ]
+  },
+  {
+    id: 'chap1_random_event',
+    text: '突然、端末が着信音を鳴らした！\n画面には「トパーズ」の文字。\n\n「げっ、こんな時に…」\n出ないと怪しまれるが、出れば長話になるかもしれない。',
+    choices: [
+      { 
+        text: '無視して推し活を続ける', 
+        nextSceneId: 'chap1_action_select',
+        action: (s) => ({ ...s, san: s.san - 5 }) // 罪悪感
+      },
+      { 
+        text: '手短に対応する', 
+        nextSceneId: 'chap1_topaz_talk',
+        action: (s) => ({ ...s, turn: s.turn + 1 }) // 時間ロス
+      }
+    ]
+  },
+  {
+    id: 'chap1_topaz_talk',
+    text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ごめんトパーズ、今すごく大事な商談中（推し活）なんだ」\n「え？ 後ろで変なBGM流れてない？ お経…？」\n\n危ない。祭壇のBGMが漏れていた。\nなんとか誤魔化して電話を切った。時間をロスしてしまった。',
+    choices: [{ text: '行動に戻る', nextSceneId: 'chap1_action_select' }]
+  },
+
+  // ... (以下、クライマックスなどはそのまま) ...
+  {
+    id: 'chap1_cleanup_early',
+    text: '「今日はこれくらいにしておこう」\n満足して片付けを始めた、その時。\n\nガチャリ。\n\n「……アベンチュリン？」\nレイシオが帰ってきた。予定より早い！\nだが、君は既に片付けを終えている。完璧だ。',
+    choices: [{ text: '余裕の笑みで迎える', nextSceneId: 'chap2_intro_safe' }]
+  },
+  // 行動パートの定義（省略せずに記載が必要な場合は言ってください）
   {
     id: 'chap1_intro',
     text: '【第1章：アベンチュリンの”推し活”】\n\n「推し活とは、時間との勝負だ」\n\n限られた時間の中で、いかに効率よく成分（レイシオ）を摂取し、明日への活力を得るか。\n今日のミッションは以下の通りだ。\n\n1. 祭壇の設営と礼拝\n2. ネット上の供給確認\n3. 証拠隠滅して何食わぬ顔で出迎える',
     choices: [
-      { text: 'ミッション開始', nextSceneId: 'chap1_action_select', action: (s) => ({ turn: 0 }) }
+      { text: 'ミッション開始', nextSceneId: 'chap1_action_select', action: (s) => ({ ...s, turn: 0 }) }
     ]
   },
   {
@@ -41,7 +89,7 @@ export const chapter1: Scene[] = [
       { 
         text: '次の行動へ', 
         nextSceneId: 'chap1_event_check',
-        action: (s) => ({ san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: s.turn + 1 }) 
       }
     ]
   },
@@ -52,7 +100,7 @@ export const chapter1: Scene[] = [
       { 
         text: '次の行動へ', 
         nextSceneId: 'chap1_event_check',
-        action: (s) => ({ otakuLevel: s.otakuLevel + 2, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, turn: s.turn + 1 }) 
       }
     ]
   },
@@ -63,44 +111,8 @@ export const chapter1: Scene[] = [
       { 
         text: '次の行動へ', 
         nextSceneId: 'chap1_event_check',
-        action: (s) => ({ otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: s.turn + 1 }) 
+        action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: s.turn + 1 }) 
       }
     ]
-  },
-  {
-    id: 'chap1_event_check',
-    text: '（時計の針が進む…）',
-    choices: [
-      { 
-        text: '……おや？', 
-        nextSceneId: 'chap1_random_event',
-      }
-    ]
-  },
-  {
-    id: 'chap1_random_event',
-    text: '突然、端末が着信音を鳴らした！\n画面には「トパーズ」の文字。\n\n「げっ、こんな時に…」\n出ないと怪しまれるが、出れば長話になるかもしれない。',
-    choices: [
-      { 
-        text: '無視して推し活を続ける', 
-        nextSceneId: 'chap1_action_select',
-        action: (s) => ({ san: s.san - 5 }) 
-      },
-      { 
-        text: '手短に対応する', 
-        nextSceneId: 'chap1_topaz_talk',
-        action: (s) => ({ turn: s.turn + 1 }) 
-      }
-    ]
-  },
-  {
-    id: 'chap1_topaz_talk',
-    text: '「もしもし？ アベンチュリン、例の案件だけど…」\n「ごめんトパーズ、今すごく大事な商談中（推し活）なんだ」\n「え？ 後ろで変なBGM流れてない？ お経…？」\n\n危ない。祭壇のBGMが漏れていた。\nなんとか誤魔化して電話を切った。時間をロスしてしまった。',
-    choices: [{ text: '行動に戻る', nextSceneId: 'chap1_action_select' }]
-  },
-  {
-    id: 'chap1_cleanup_early',
-    text: '「今日はこれくらいにしておこう」\n満足して片付けを始めた、その時。\n\nガチャリ。\n\n「……アベンチュリン？」\nレイシオが帰ってきた。予定より早い！\nだが、君は既に片付けを終えている。完璧だ。',
-    choices: [{ text: '余裕の笑みで迎える', nextSceneId: 'chap2_intro_safe' }]
   }
 ];
