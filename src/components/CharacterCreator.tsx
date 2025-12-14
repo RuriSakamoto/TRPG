@@ -142,7 +142,7 @@ export const CharacterCreator = () => {
 
   const startGame = async () => {
     const isComplete = Object.keys(STAT_FORMULAS).every(
-      stat => character[stat as keyof CharacterStats] > 0
+      stat => character[stat as keyof typeof STAT_FORMULAS] > 0
     );
 
     if (!isComplete) {
