@@ -182,8 +182,8 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       }
     }
 
-    // ターン数を増やす
-    updateStatus({ turn: (status.turn || 0) + 1 });
+    // ターン数を増やす処理を削除（各シーンのaction関数で管理）
+    // updateStatus({ turn: (status.turn || 0) + 1 });
   };
 
   const resetGame = () => {
