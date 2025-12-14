@@ -3,6 +3,9 @@ import { sql } from '@vercel/postgres';
 import { getCurrentUser } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
+// 動的レンダリングを強制
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // カウンターをインクリメント

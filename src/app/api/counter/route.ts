@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 
+// 動的レンダリングを強制
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const result = await sql`
