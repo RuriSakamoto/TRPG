@@ -148,7 +148,7 @@ export const chapter1: Scene[] = [
     ]
   },
 
-  // --- イベント発生判定 ---
+  // --- イベント発生判定（修正版） ---
   {
     id: 'chap1_check_event',
     title: '時間経過',
@@ -166,14 +166,14 @@ export const chapter1: Scene[] = [
         condition: (s) => (s.turn || 0) < 3
       },
       {
+        text: '行動を続ける',
+        nextScene: 'chap1_action_select',
+        condition: (s) => (s.turn || 0) === 4
+      },
+      {
         text: 'そろそろ時間だ',
         nextScene: 'chap1_cleanup_early',
         condition: (s) => (s.turn || 0) >= 5
-      },
-      {
-        text: '行動を続ける',
-        nextScene: 'chap1_action_select',
-        condition: (s) => (s.turn || 0) > 3 && (s.turn || 0) < 5
       }
     ]
   },

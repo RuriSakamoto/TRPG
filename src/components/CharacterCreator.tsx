@@ -34,7 +34,8 @@ export const CharacterCreator = () => {
   const [showCounterAnimation, setShowCounterAnimation] = useState(false);
   const [animatedCount, setAnimatedCount] = useState(0);
   const [isCounterLoading, setIsCounterLoading] = useState(false);
-  const hasIncrementedRef = useRef(false); // カウントアップが既に実行されたかを追跡
+  const hasIncrementedRef = useRef(false);
+  const counterIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // デバッグログ表示用
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
@@ -45,12 +46,16 @@ export const CharacterCreator = () => {
     const timestamp = new Date().toLocaleTimeString('ja-JP');
     const logMessage = `[${timestamp}] ${message}`;
     console.log(logMessage);
-    setDebugLogs(prev => [...prev.slice(-19), logMessage]); // 最新20件を保持
+    setDebugLogs(prev => [...prev.slice(-19), logMessage]);
   };
 
   // カウンターを取得する関数
   const fetchCounter = async () => {
-    if (isCounterLoading) return;
+    // インクリメント中は取得をスキップ
+    if (isCounterLoading || hasIncrementedRef.current) {
+      addLog('カウンター取得をスキップ（インクリメント中または完了済み）');
+      return;
+    }
     
     setIsCounterLoading(true);
     try {
@@ -93,6 +98,12 @@ export const CharacterCreator = () => {
       return;
     }
 
+    // 定期取得を一時停止
+    if (counterIntervalRef.current) {
+      clearInterval(counterIntervalRef.current);
+      addLog('定期取得を一時停止');
+    }
+
     try {
       addLog('カウンターをインクリメント中...');
       const response = await fetch('/api/counter/increment', {
@@ -112,7 +123,7 @@ export const CharacterCreator = () => {
       addLog(`インクリメントレスポンスデータ: ${JSON.stringify(data)}`);
       
       if (data.count) {
-        hasIncrementedRef.current = true; // インクリメント完了をマーク
+        hasIncrementedRef.current = true;
         
         // カウントアップアニメーションを表示
         setShowCounterAnimation(true);
@@ -120,7 +131,7 @@ export const CharacterCreator = () => {
         setAnimatedCount(startCount);
         
         // アニメーション効果
-        const duration = 3000; // 3秒に延長
+        const duration = 3000;
         const steps = 60;
         const increment = (data.count - startCount) / steps;
         let currentStep = 0;
@@ -135,6 +146,8 @@ export const CharacterCreator = () => {
             // 2秒後にアニメーションを非表示
             setTimeout(() => {
               setShowCounterAnimation(false);
+              // アニメーション終了後、定期取得を再開
+              startCounterInterval();
             }, 2000);
           } else {
             setAnimatedCount(Math.floor(startCount + increment * currentStep));
@@ -143,24 +156,37 @@ export const CharacterCreator = () => {
       }
     } catch (error) {
       addLog(`カウンターインクリメントエラー: ${error}`);
+      // エラー時も定期取得を再開
+      startCounterInterval();
     }
   };
 
+  // 定期取得を開始する関数
+  const startCounterInterval = () => {
+    if (counterIntervalRef.current) {
+      clearInterval(counterIntervalRef.current);
+    }
+    
+    counterIntervalRef.current = setInterval(() => {
+      if (hasIncrementedRef.current) {
+        fetchCounter();
+      }
+    }, 10000);
+    
+    addLog('定期取得を再開');
+  };
+
   useEffect(() => {
-    // 認証状態が確定するまで待つ
     if (authLoading) return;
 
-    // ログイン状態に応じてエンディングを読み込む
     const loadEndings = async () => {
       setLoadingEndings(true);
       try {
         const endings = await getClearedEndings(!!user);
         setClearedEndings(endings);
 
-        // ログイン時にLocalStorageのデータをDBに移行
         if (user) {
           await migrateLocalEndingsToDB();
-          // 移行後、再度DBから取得
           const updatedEndings = await getClearedEndings(true);
           setClearedEndings(updatedEndings);
         }
@@ -176,25 +202,20 @@ export const CharacterCreator = () => {
     // 初回カウンター取得
     fetchCounter();
 
-    // 10秒ごとにカウンターを更新
-    const counterInterval = setInterval(() => {
-      fetchCounter();
-    }, 10000); // 10秒
-
     // クリーンアップ
     return () => {
-      clearInterval(counterInterval);
+      if (counterIntervalRef.current) {
+        clearInterval(counterIntervalRef.current);
+      }
     };
   }, [user, authLoading]);
 
   // コンポーネントマウント時にカウンターをインクリメント
   useEffect(() => {
-    // 初回マウント時のみ実行
     if (!hasIncrementedRef.current && totalCount !== null) {
-      // カウンターが取得できたらインクリメント
       const timer = setTimeout(() => {
         incrementCounter();
-      }, 1000); // 1秒待ってからインクリメント
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -249,7 +270,6 @@ export const CharacterCreator = () => {
     });
   };
 
-  // 一括ロール機能
   const rollAllDice = () => {
     const stats = Object.keys(STAT_FORMULAS) as Array<keyof typeof STAT_FORMULAS>;
     const newHistory: Record<string, number[]> = { ...rollHistory };
@@ -282,7 +302,6 @@ export const CharacterCreator = () => {
       return;
     }
 
-    // ゲームデータを保存して遷移
     const gameData = {
       character,
       skills: selectedSkills,
@@ -301,20 +320,15 @@ export const CharacterCreator = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 text-white p-4 sm:p-6 lg:p-8">
-      {/* カウントアップアニメーションオーバーレイ */}
+      {/* カウントアップアニメーションオーバーレイ - 「ようこそ」テキストを削除 */}
       {showCounterAnimation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
           <div className="text-center">
-            <div className="mb-8">
-              <div className="text-4xl sm:text-6xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-300 to-amber-200 animate-pulse">
-                {animatedCount.toLocaleString()}
-              </div>
-              <div className="text-xl sm:text-2xl md:text-4xl mt-4 text-slate-200">
-                人目のアベンチュリン
-              </div>
+            <div className="text-4xl sm:text-6xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-300 to-amber-200 animate-pulse mb-4">
+              {animatedCount.toLocaleString()}
             </div>
-            <div className="text-base sm:text-lg text-slate-300 animate-bounce">
-              ようこそ、探求者よ...
+            <div className="text-xl sm:text-2xl md:text-4xl text-slate-200">
+              人目のアベンチュリン
             </div>
           </div>
         </div>
@@ -356,7 +370,6 @@ export const CharacterCreator = () => {
         </div>
       )}
 
-      {/* ユーザーメニューを右上に追加 */}
       <div className="absolute top-4 right-4 z-10">
         <UserMenu />
       </div>
@@ -376,15 +389,13 @@ export const CharacterCreator = () => {
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="text-2xl sm:text-3xl">✨</span>
                 <div className="text-sm sm:text-base">
-                  <span className="text-slate-300">現在</span>
-                  <span className="text-2xl sm:text-3xl font-bold mx-1 sm:mx-2 text-amber-400 transition-all duration-500">
+                  <span className="text-2xl sm:text-3xl font-bold text-amber-400 transition-all duration-500">
                     {totalCount.toLocaleString()}
                   </span>
-                  <span className="text-slate-300">人のアベンチュリンが誕生しています</span>
+                  <span className="text-slate-300 ml-2">人のアベンチュリンが誕生しています</span>
                 </div>
                 <span className="text-2xl sm:text-3xl">✨</span>
               </div>
-              {/* リアルタイム更新インジケーター */}
               <div className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
                 <span className={`inline-block w-2 h-2 rounded-full ${isCounterLoading ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></span>
                 <span>リアルタイム更新中</span>

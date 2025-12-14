@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useTRPG } from '../hooks/useTRPG';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ export const GameScreen = () => {
   });
 
   const [isClient, setIsClient] = useState(false);
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -50,6 +51,13 @@ export const GameScreen = () => {
       router.push('/');
     }
   }, [router, setInitialStatus]);
+
+  // ログが更新されたら自動スクロール
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs]);
 
   // 時刻を計算する関数（21時スタート、1ターン = 30分）
   const getCurrentTime = () => {
@@ -159,9 +167,9 @@ export const GameScreen = () => {
             </div>
           </div>
 
-          {/* ログ表示 */}
+          {/* ログ表示（自動スクロール対応） */}
           <div className="bg-slate-800/60 backdrop-blur-md rounded-lg p-4 sm:p-6 border border-slate-600 max-h-[400px] sm:max-h-[600px] overflow-y-auto">
-            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-slate-100 sticky top-0 bg-slate-800/90 pb-2">
+            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-slate-100 sticky top-0 bg-slate-800/90 pb-2 z-10">
               ログ
             </h3>
             <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
@@ -181,6 +189,8 @@ export const GameScreen = () => {
                   {log}
                 </div>
               ))}
+              {/* 自動スクロール用の要素 */}
+              <div ref={logEndRef} />
             </div>
           </div>
         </div>
