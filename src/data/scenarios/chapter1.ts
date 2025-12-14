@@ -68,7 +68,7 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '至福の時間だった', 
-        nextScene: 'chap1_check_event',
+        nextScene: 'chap1_action_select',
         action: (s) => ({ ...s, san: Math.min(s.san + 25, 90), otakuLevel: s.otakuLevel + 2, turn: (s.turn || 0) + 1 }) 
       }
     ]
@@ -81,7 +81,7 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '次の行動へ', 
-        nextScene: 'chap1_check_event',
+        nextScene: 'chap1_action_select',
         action: (s) => ({ ...s, san: Math.min(s.san + 15, 90), turn: (s.turn || 0) + 1 }) 
       }
     ]
@@ -94,7 +94,7 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '次の行動へ', 
-        nextScene: 'chap1_check_event',
+        nextScene: 'chap1_action_select',
         action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, turn: (s.turn || 0) + 1 }) 
       }
     ]
@@ -129,7 +129,7 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '大満足だ', 
-        nextScene: 'chap1_check_event',
+        nextScene: 'chap1_action_select',
         action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 3, affection: s.affection + 2, turn: (s.turn || 0) + 1 }) 
       }
     ]
@@ -142,43 +142,13 @@ export const chapter1: Scene[] = [
     choices: [
       { 
         text: '次の行動へ', 
-        nextScene: 'chap1_check_event',
+        nextScene: 'chap1_action_select',
         action: (s) => ({ ...s, otakuLevel: s.otakuLevel + 1, affection: s.affection + 1, turn: (s.turn || 0) + 1 }) 
       }
     ]
   },
 
-  // --- イベント発生判定（修正版） ---
-  {
-    id: 'chap1_check_event',
-    title: '時間経過',
-    description: 'イベント発生の確認',
-    text: '現在時刻：{{TIME}}。\n\n（時計の針が進む…）',
-    choices: [
-      { 
-        text: '……おや？', 
-        nextScene: 'chap1_listen_check',
-        condition: (s) => (s.turn || 0) === 3
-      },
-      {
-        text: 'まだ時間はある',
-        nextScene: 'chap1_action_select',
-        condition: (s) => (s.turn || 0) < 3
-      },
-      {
-        text: '行動を続ける',
-        nextScene: 'chap1_action_select',
-        condition: (s) => (s.turn || 0) === 4
-      },
-      {
-        text: 'そろそろ時間だ',
-        nextScene: 'chap1_cleanup_early',
-        condition: (s) => (s.turn || 0) >= 5
-      }
-    ]
-  },
-
-  // --- 聞き耳判定 ---
+  // --- 聞き耳判定（turn=3で自動発生） ---
   {
     id: 'chap1_listen_check',
     title: '物音',
