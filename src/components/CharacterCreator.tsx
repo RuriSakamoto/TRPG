@@ -31,35 +31,12 @@ export const CharacterCreator = () => {
 
   // カウンター関連
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [showCounterAnimation, setShowCounterAnimation] = useState(false);
-  const [animatedCount, setAnimatedCount] = useState(0);
-  const [isCounterLoading, setIsCounterLoading] = useState(false);
   const hasIncrementedRef = useRef(false);
   const counterIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // デバッグログ表示用
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-  const [showDebugLogs, setShowDebugLogs] = useState(false);
-
-  // ログを追加する関数
-  const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString('ja-JP');
-    const logMessage = `[${timestamp}] ${message}`;
-    console.log(logMessage);
-    setDebugLogs(prev => [...prev.slice(-19), logMessage]);
-  };
-
   // カウンターを取得する関数
   const fetchCounter = async () => {
-    // インクリメント中は取得をスキップ
-    if (isCounterLoading || hasIncrementedRef.current) {
-      addLog('カウンター取得をスキップ（インクリメント中または完了済み）');
-      return;
-    }
-    
-    setIsCounterLoading(true);
     try {
-      addLog('カウンターを取得中...');
       const response = await fetch('/api/counter', {
         cache: 'no-store',
         headers: {
@@ -67,45 +44,30 @@ export const CharacterCreator = () => {
         },
       });
       
-      addLog(`カウンターレスポンスステータス: ${response.status}`);
-      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
-      addLog(`カウンターデータ受信: ${JSON.stringify(data)}`);
       
       if (data.count !== undefined && data.count !== null) {
-        addLog(`totalCountを設定: ${data.count}`);
         setTotalCount(data.count);
       } else {
-        addLog(`カウンターデータにcountが含まれていません: ${JSON.stringify(data)}`);
         setTotalCount(0);
       }
     } catch (error) {
-      addLog(`カウンター取得エラー: ${error}`);
+      console.error('カウンター取得エラー:', error);
       setTotalCount(0);
-    } finally {
-      setIsCounterLoading(false);
     }
   };
 
-  // カウンターをインクリメントする関数
+  // カウンターをインクリメントする関数（静かに実行）
   const incrementCounter = async () => {
     if (hasIncrementedRef.current) {
-      addLog('カウンターは既にインクリメント済みです');
       return;
     }
 
-    // 定期取得を一時停止
-    if (counterIntervalRef.current) {
-      clearInterval(counterIntervalRef.current);
-      addLog('定期取得を一時停止');
-    }
-
     try {
-      addLog('カウンターをインクリメント中...');
       const response = await fetch('/api/counter/increment', {
         method: 'POST',
         headers: {
@@ -113,50 +75,21 @@ export const CharacterCreator = () => {
         },
       });
 
-      addLog(`インクリメントレスポンスステータス: ${response.status}`);
-
       if (!response.ok) {
         throw new Error('カウンターの更新に失敗しました');
       }
 
       const data = await response.json();
-      addLog(`インクリメントレスポンスデータ: ${JSON.stringify(data)}`);
       
       if (data.count) {
         hasIncrementedRef.current = true;
+        setTotalCount(data.count);
         
-        // カウントアップアニメーションを表示
-        setShowCounterAnimation(true);
-        const startCount = totalCount || 0;
-        setAnimatedCount(startCount);
-        
-        // アニメーション効果
-        const duration = 3000;
-        const steps = 60;
-        const increment = (data.count - startCount) / steps;
-        let currentStep = 0;
-
-        const timer = setInterval(() => {
-          currentStep++;
-          if (currentStep >= steps) {
-            setAnimatedCount(data.count);
-            setTotalCount(data.count);
-            clearInterval(timer);
-            
-            // 2秒後にアニメーションを非表示
-            setTimeout(() => {
-              setShowCounterAnimation(false);
-              // アニメーション終了後、定期取得を再開
-              startCounterInterval();
-            }, 2000);
-          } else {
-            setAnimatedCount(Math.floor(startCount + increment * currentStep));
-          }
-        }, duration / steps);
+        // 定期取得を開始
+        startCounterInterval();
       }
     } catch (error) {
-      addLog(`カウンターインクリメントエラー: ${error}`);
-      // エラー時も定期取得を再開
+      console.error('カウンターインクリメントエラー:', error);
       startCounterInterval();
     }
   };
@@ -168,12 +101,8 @@ export const CharacterCreator = () => {
     }
     
     counterIntervalRef.current = setInterval(() => {
-      if (hasIncrementedRef.current) {
-        fetchCounter();
-      }
+      fetchCounter();
     }, 10000);
-    
-    addLog('定期取得を再開');
   };
 
   useEffect(() => {
@@ -191,7 +120,7 @@ export const CharacterCreator = () => {
           setClearedEndings(updatedEndings);
         }
       } catch (error) {
-        addLog(`エンディング読み込みエラー: ${error}`);
+        console.error('エンディング読み込みエラー:', error);
       } finally {
         setLoadingEndings(false);
       }
@@ -210,21 +139,14 @@ export const CharacterCreator = () => {
     };
   }, [user, authLoading]);
 
-  // コンポーネントマウント時にカウンターをインクリメント
+  // コンポーネントマウント時にカウンターをインクリメント（静かに）
   useEffect(() => {
     if (!hasIncrementedRef.current && totalCount !== null) {
       const timer = setTimeout(() => {
         incrementCounter();
-      }, 1000);
+      }, 500);
 
       return () => clearTimeout(timer);
-    }
-  }, [totalCount]);
-
-  // totalCountが変更されたときのログ
-  useEffect(() => {
-    if (totalCount !== null) {
-      addLog(`totalCount更新: ${totalCount}`);
     }
   }, [totalCount]);
 
@@ -312,7 +234,6 @@ export const CharacterCreator = () => {
     localStorage.setItem('character', JSON.stringify(character));
     localStorage.setItem('gameData', JSON.stringify(gameData));
     
-    addLog('ゲーム画面へ遷移します');
     router.push('/game');
   };
 
@@ -320,56 +241,6 @@ export const CharacterCreator = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 text-white p-4 sm:p-6 lg:p-8">
-      {/* カウントアップアニメーションオーバーレイ - 「ようこそ」テキストを削除 */}
-      {showCounterAnimation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
-          <div className="text-center">
-            <div className="text-4xl sm:text-6xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-300 to-amber-200 animate-pulse mb-4">
-              {animatedCount.toLocaleString()}
-            </div>
-            <div className="text-xl sm:text-2xl md:text-4xl text-slate-200">
-              人目のアベンチュリン
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* デバッグログ表示ボタン */}
-      <div className="fixed bottom-4 left-4 z-40">
-        <button
-          onClick={() => setShowDebugLogs(!showDebugLogs)}
-          className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs font-mono shadow-lg border border-slate-500"
-        >
-          {showDebugLogs ? 'ログを隠す' : 'ログを表示'}
-        </button>
-      </div>
-
-      {/* デバッグログパネル */}
-      {showDebugLogs && (
-        <div className="fixed bottom-16 left-4 z-40 bg-black/90 text-green-400 p-4 rounded-lg shadow-2xl border border-green-500 max-w-2xl max-h-96 overflow-y-auto font-mono text-xs">
-          <div className="flex justify-between items-center mb-2 sticky top-0 bg-black/90 pb-2">
-            <h3 className="font-bold text-sm">デバッグログ</h3>
-            <button
-              onClick={() => setDebugLogs([])}
-              className="text-red-400 hover:text-red-300 text-xs"
-            >
-              クリア
-            </button>
-          </div>
-          <div className="space-y-1">
-            {debugLogs.length === 0 ? (
-              <div className="text-slate-500">ログはありません</div>
-            ) : (
-              debugLogs.map((log, index) => (
-                <div key={index} className="border-b border-green-900/30 pb-1">
-                  {log}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
       <div className="absolute top-4 right-4 z-10">
         <UserMenu />
       </div>
@@ -382,8 +253,8 @@ export const CharacterCreator = () => {
           <p className="text-lg sm:text-xl text-slate-300">Aventurine's Fan Activity</p>
         </div>
 
-        {/* カウンター表示 */}
-        {totalCount !== null ? (
+        {/* カウンター表示（シンプル版） */}
+        {totalCount !== null && (
           <div className="mb-6 text-center">
             <div className="inline-block bg-slate-700/50 border-2 border-amber-600/50 rounded-full px-4 sm:px-8 py-3 sm:py-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -395,18 +266,6 @@ export const CharacterCreator = () => {
                   <span className="text-slate-300 ml-2">人のアベンチュリンが誕生しています</span>
                 </div>
                 <span className="text-2xl sm:text-3xl">✨</span>
-              </div>
-              <div className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
-                <span className={`inline-block w-2 h-2 rounded-full ${isCounterLoading ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></span>
-                <span>リアルタイム更新中</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mb-6 text-center">
-            <div className="inline-block bg-slate-700/50 border-2 border-amber-600/50 rounded-full px-4 sm:px-8 py-3 sm:py-4 backdrop-blur-sm">
-              <div className="text-sm sm:text-base text-slate-300">
-                カウンターを読み込み中...
               </div>
             </div>
           </div>
