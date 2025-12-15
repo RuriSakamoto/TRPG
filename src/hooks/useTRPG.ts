@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { GameStatus, Scene, Choice, RollResult, initializeSkillValues } from '../types/game';
 import { scenarioData } from '../data/scenario';
 import { saveEndingToStorage } from '../lib/storage';
@@ -29,15 +29,24 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     scenarioData[0].description
   ]);
   const [rollResults, setRollResults] = useState<RollResult[]>([]);
+  
+  // 初期化済みフラグ
+  const isInitializedRef = useRef(false);
 
-  // 初期ステータスを設定する関数
-  const setInitialStatus = (initialStatus: GameStatus) => {
+  // 初期ステータスを設定する関数（1回のみ実行）
+  const setInitialStatus = useCallback((initialStatus: GameStatus) => {
+    if (isInitializedRef.current) {
+      return; // 既に初期化済みの場合は何もしない
+    }
+    
     setStatus(initialStatus);
     setLogs([
       `--- ${scenarioData[0].title} ---`,
       scenarioData[0].description
     ]);
-  };
+    
+    isInitializedRef.current = true;
+  }, []);
 
   const updateStatus = useCallback((updates: Partial<GameStatus>) => {
     setStatus(prev => {
@@ -54,11 +63,11 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     });
   }, [isLoggedIn]);
 
-  const addToLogs = (text: string) => {
+  const addToLogs = useCallback((text: string) => {
     setLogs(prev => [...prev, text]);
-  };
+  }, []);
 
-  const rollDice = (skillName: string, difficulty: number = 50): RollResult => {
+  const rollDice = useCallback((skillName: string, difficulty: number = 50): RollResult => {
     const roll = Math.floor(Math.random() * 100) + 1;
     
     // 習得技能の場合は+20%ボーナス
@@ -87,7 +96,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
     );
 
     return result;
-  };
+  }, [status.skills, status.skillValues, addToLogs]);
 
   const handleChoice = useCallback((choice: Choice) => {
     // 選択肢のテキストをログに追加
@@ -200,7 +209,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
         }
       }
     }
-  }, [status, rollDice, updateStatus]);
+  }, [status, rollDice, updateStatus, addToLogs]);
 
   const resetGame = () => {
     setStatus({
@@ -221,6 +230,7 @@ export const useTRPG = ({ isLoggedIn }: UseTRPGProps) => {
       scenarioData[0].description
     ]);
     setRollResults([]);
+    isInitializedRef.current = false;
   };
 
   return {

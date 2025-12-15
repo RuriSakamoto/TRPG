@@ -13,10 +13,14 @@ export const GameScreen = () => {
   });
 
   const [isClient, setIsClient] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsClient(true);
+
+    // 既に初期化済みの場合はスキップ
+    if (isInitialized) return;
 
     // LocalStorageからキャラクターデータを読み込む
     const savedCharacter = localStorage.getItem('character');
@@ -42,6 +46,8 @@ export const GameScreen = () => {
           clearedEndings: [],
           loopCount: 1,
         });
+
+        setIsInitialized(true);
       } catch (error) {
         console.error('Failed to load game data:', error);
         router.push('/');
@@ -50,7 +56,7 @@ export const GameScreen = () => {
       // データがない場合はキャラクター作成画面へ
       router.push('/');
     }
-  }, [router, setInitialStatus]);
+  }, []); // 依存配列を空にして初回のみ実行
 
   // ログが更新されたら自動スクロール
   useEffect(() => {
@@ -103,9 +109,9 @@ export const GameScreen = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
-        {/* ステータス表示 */}
+        {/* ステータス表示（時刻表示を削除） */}
         <div className="bg-slate-800/60 backdrop-blur-md rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600">
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 text-xs sm:text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 text-xs sm:text-sm">
             <div>
               <span className="text-slate-400">HP:</span>
               <span className="ml-1 sm:ml-2 font-bold text-red-400">{status.hp}</span>
@@ -125,10 +131,6 @@ export const GameScreen = () => {
             <div>
               <span className="text-slate-400">ターン:</span>
               <span className="ml-1 sm:ml-2 font-bold text-amber-400">{status.turn}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">時刻:</span>
-              <span className="ml-1 sm:ml-2 font-bold text-green-400">{getCurrentTime()}</span>
             </div>
           </div>
         </div>
