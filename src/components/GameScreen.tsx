@@ -13,14 +13,10 @@ export const GameScreen = () => {
   });
 
   const [isClient, setIsClient] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsClient(true);
-
-    // 既に初期化済みの場合はスキップ
-    if (isInitialized) return;
 
     // LocalStorageからキャラクターデータを読み込む
     const savedCharacter = localStorage.getItem('character');
@@ -46,8 +42,6 @@ export const GameScreen = () => {
           clearedEndings: [],
           loopCount: 1,
         });
-
-        setIsInitialized(true);
       } catch (error) {
         console.error('Failed to load game data:', error);
         router.push('/');
@@ -56,7 +50,7 @@ export const GameScreen = () => {
       // データがない場合はキャラクター作成画面へ
       router.push('/');
     }
-  }, []); // 依存配列を空にして初回のみ実行
+  }, [router, setInitialStatus]);
 
   // ログが更新されたら自動スクロール
   useEffect(() => {
@@ -109,9 +103,9 @@ export const GameScreen = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
-        {/* ステータス表示（時刻表示を削除） */}
+        {/* ステータス表示 */}
         <div className="bg-slate-800/60 backdrop-blur-md rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 text-xs sm:text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 text-xs sm:text-sm">
             <div>
               <span className="text-slate-400">HP:</span>
               <span className="ml-1 sm:ml-2 font-bold text-red-400">{status.hp}</span>
@@ -131,6 +125,10 @@ export const GameScreen = () => {
             <div>
               <span className="text-slate-400">ターン:</span>
               <span className="ml-1 sm:ml-2 font-bold text-amber-400">{status.turn}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">時刻:</span>
+              <span className="ml-1 sm:ml-2 font-bold text-green-400">{getCurrentTime()}</span>
             </div>
           </div>
         </div>
@@ -169,30 +167,64 @@ export const GameScreen = () => {
             </div>
           </div>
 
-          {/* ログ表示（自動スクロール対応） */}
-          <div className="bg-slate-800/60 backdrop-blur-md rounded-lg p-4 sm:p-6 border border-slate-600 max-h-[400px] sm:max-h-[600px] overflow-y-auto">
-            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-slate-100 sticky top-0 bg-slate-800/90 pb-2 z-10">
-              ログ
-            </h3>
-            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-              {logs.map((log, index) => (
-                <div
-                  key={index}
-                  className={`${
-                    log.startsWith('🎲')
-                      ? 'text-amber-400'
-                      : log.startsWith('>')
-                      ? 'text-blue-400 font-semibold'
-                      : log.startsWith('---')
-                      ? 'text-green-400 font-bold'
-                      : 'text-slate-300'
-                  }`}
-                >
-                  {log}
+          {/* ログ表示（スマホでは折りたたみ可能） */}
+          <div className="bg-slate-800/60 backdrop-blur-md rounded-lg border border-slate-600">
+            {/* スマホ用：クリックで開閉 */}
+            <details className="lg:hidden">
+              <summary className="p-4 cursor-pointer text-lg font-bold text-slate-100 hover:bg-slate-700/50 transition-colors rounded-lg list-none">
+                <div className="flex items-center justify-between">
+                  <span>ログ ({logs.length})</span>
+                  <svg className="w-5 h-5 transition-transform details-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-              ))}
-              {/* 自動スクロール用の要素 */}
-              <div ref={logEndRef} />
+              </summary>
+              <div className="p-4 max-h-[300px] overflow-y-auto space-y-1 text-xs border-t border-slate-600">
+                {logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`${
+                      log.startsWith('🎲')
+                        ? 'text-amber-400'
+                        : log.startsWith('>')
+                        ? 'text-blue-400 font-semibold'
+                        : log.startsWith('---')
+                        ? 'text-green-400 font-bold'
+                        : 'text-slate-300'
+                    }`}
+                  >
+                    {log}
+                  </div>
+                ))}
+                <div ref={logEndRef} />
+              </div>
+            </details>
+
+            {/* デスクトップ用：常時表示 */}
+            <div className="hidden lg:block p-4 sm:p-6 max-h-[400px] sm:max-h-[600px] overflow-y-auto">
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-slate-100 sticky top-0 bg-slate-800/90 pb-2 z-10">
+                ログ
+              </h3>
+              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+                {logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`${
+                      log.startsWith('🎲')
+                        ? 'text-amber-400'
+                        : log.startsWith('>')
+                        ? 'text-blue-400 font-semibold'
+                        : log.startsWith('---')
+                        ? 'text-green-400 font-bold'
+                        : 'text-slate-300'
+                    }`}
+                  >
+                    {log}
+                  </div>
+                ))}
+                {/* 自動スクロール用の要素 */}
+                <div ref={logEndRef} />
+              </div>
             </div>
           </div>
         </div>
